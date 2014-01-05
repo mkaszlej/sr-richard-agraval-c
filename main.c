@@ -1,26 +1,26 @@
 #include <stdio.h>
 #include <unistd.h>
-#include "socket.h"
+#include "client.h"
 
 int main(int argc, char* argv[])
 {
-	char *ipNumber = NULL;
-	int mode = 0;
+	char *host = NULL;
+	int port = 5001;
 	int i, option;
 
 	/* Odczyt wejscia */
-	while ((option = getopt (argc, argv, "i:m:")) != -1)
+	while ((option = getopt (argc, argv, "h:p:")) != -1)
  	{
 		switch(option)
 		{
-			case 'i':
-				ipNumber = optarg;
+			case 'h':
+				host = optarg;
 				break;
-			case 'm':
-				mode = atoi(optarg);
+			case 'p':
+				port = atoi(optarg);
 				break;
 			case '?':
-				if (optopt == "i" || optopt == "m" )
+				if (optopt == "h" || optopt == "p" )
 					fprintf(stderr, "UWAGA: Opcja %c wymaga argumentu\n", optopt);
 				else if (isprint(optopt))
 					fprintf(stderr, "UWAGA: Nieznana opcja %c\n", optopt);
@@ -34,8 +34,16 @@ int main(int argc, char* argv[])
 	for (i = optind; i < argc; i++)
         	printf ("UWAGA: Argument, bez opcji %s\n", argv[i]);
 
-	/* Chwilowo tylko wypisujemy co weszło */
-	printf("IP: %s\nMODE: %d\n", ipNumber, mode);
+	if( host == NULL ) 
+	{
+		fprintf(stderr, "UWAGA: Konieczne jest podanie hosta (-h)\n");
+		exit(1);
+	}
+	
+	printf("HOST: %s\nPORT: %d\n", host, port);
+
+	client(port,host);
+
 	return 0;
 }
 

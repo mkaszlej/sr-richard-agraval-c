@@ -4,8 +4,8 @@ LDFLAGS=
 
 all: richard-agravala server
 		
-richard-agravala: main.c socket.c socket.h
-	$(CC) $(CFLAGS) main.c socket.c -o richard-agravala
+richard-agravala: main.c client.c client.h
+	clear; $(CC) $(CFLAGS) main.c client.c -o richard-agravala 
 
 server: server.c
 	$(CC) $(CFLAGS) server.c -o server
