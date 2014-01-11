@@ -4,6 +4,9 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
+#include "server.h"
+
+extern int global_port;
 
 int mystrcmp(char const* s1, char const* s2, int n){
   int i;
@@ -18,77 +21,53 @@ int mystrcmp(char const* s1, char const* s2, int n){
   return 1;
 }
 
-void doprocessing (int sock)
+void *receiveMessage(void *fd_void_ptr)
 {
+    int sock = (*(int *)fd_void_ptr);	//get socket file descriptor
+
+    printf("NEW THREAD[%d]: Receiving Message\n", sock);
+
     int n;
     char buffer[256];
 
     do 
     {
-	bzero(buffer,256);
-        n = read(sock,buffer,255);
+	bzero(buffer,256);		//zeruj buffer
+        n = read(sock,buffer,255);	//odczytaj z bufora
         if (n < 0)
         {
-            perror("ERROR reading from socket");
-            exit(1);
+            fprintf(stderr, "THREAD[%d]: ERROR reading from socket - exiting", sock);
+            return NULL;
         }
-        printf("Here is the message: %s \n",buffer);
-	fflush(stdout);
-        n = write(sock,"I got your message",18);
 
+
+        printf("THREAD[%d]: Here is the message: %s \n",sock ,buffer);
+	fflush(stdout);
+
+
+        n = write(sock,"Acknowledged",18);
         if (n < 0) 
         {
-            perror("ERROR writing to socket");
+            fprintf(stderr, "THREAD[%d]: ERROR writing to socket", sock);
             exit(1);
 	}	
     }
     while( mystrcmp( "exit" , buffer , 4 ) != 1 );
 
+    close(sock);
+    printf("THREAD[%d] FINISHED ITS DUTY\n", sock);
+
+    return NULL;
+
 }
 
-int readInput( int argc , char *argv[] )
-{
-        int portNo = -1;
-        int i, option;
-
-        /* Odczyt wejscia */
-        while ((option = getopt (argc, argv, "p:")) != -1)
-        {
-                switch(option)
-                {
-                        case 'p':
-                                portNo = atoi(optarg);
-                                break;
-                        case '?':
-                                if (optopt == "p"  )
-                                        fprintf(stderr, "UWAGA: Opcja %c wymaga argumentu\n", optopt);
-                                else if (isprint(optopt))
-                                        fprintf(stderr, "UWAGA: Nieznana opcja %c\n", optopt);
-                                else 
-                                        fprintf(stderr, "UWAGA: Nieznana opcja `\\x%x'i\n", optopt);
-                                return 1;                                                                                    
-                        default:
-                                break;
-                }
-        }
-        for (i = optind; i < argc; i++)
-                printf ("UWAGA: Argument, bez opcji %s\n", argv[i]);
-
-
-	return portNo;
-}
-
-int main( int argc, char *argv[] )
+void *listenMessages(void *x_void_ptr)
 {
 
-    int sockfd, newsockfd, portno, clilen;
+    int sockfd, newsockfd, clilen;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int  n;
-
-    portno = readInput( argc, argv );
-    if (portno < 0) portno = 5001;
-    printf("\nODCZYTAŁEM PORT: %d\n", portno);
 
     /* First call to socket() function */
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -102,7 +81,7 @@ int main( int argc, char *argv[] )
     //portno = 5001;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(portno);
+    serv_addr.sin_port = htons(global_port);	//port defined in main.h
  
     /* Now bind the host address using bind() call.*/
     if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
@@ -118,30 +97,29 @@ int main( int argc, char *argv[] )
     clilen = sizeof(cli_addr);
     while (1) 
     {
-        newsockfd = accept(sockfd, 
-                (struct sockaddr *) &cli_addr, &clilen);
+
+        newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+	
+	printf("[SERVERSOCKET:%d] Nawiązano połączenie \n", global_port);
+
         if (newsockfd < 0)
         {
             perror("ERROR on accept");
             exit(1);
         }
-        /* Create child process */
-        int pid = fork();
-        if (pid < 0)
-        {
-            perror("ERROR on fork");
-	    exit(1);
-        }
-        if (pid == 0)  
-        {
-            /* This is the client process */
-            close(sockfd);
-            doprocessing(newsockfd);
-            exit(0);
-        }
-        else
-        {
-            close(newsockfd);
-        }
+
+
+	/* this variable is our reference to the second thread */
+	pthread_t process_thread;
+
+	/* create a second thread which executes inc_x(&x) */
+	if(pthread_create(& process_thread, NULL, receiveMessage, &newsockfd)) {
+		fprintf(stderr, "Error creating thread\n");
+		exit(1);
+	}
+
     } /* end of while */
+
+    return NULL;
+
 }

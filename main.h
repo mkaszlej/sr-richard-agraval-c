@@ -16,6 +16,8 @@ nodeAddress node[MAX_NODES];
 
 int nodeCount = 0 ;	//Indeks na pierwszy pusty element w tablicy node
 
+int global_port = -1;	//Gloablny port nasluchiwania
+
 static const char configDefault[] = "./config"; //Domyslny plik konfiguracyjny 
 char *configPath = NULL; //Sciezka do pliku konfiguracyjnego
 

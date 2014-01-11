@@ -4,12 +4,12 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <time.h>
-#include "main.h"
 #include <arpa/inet.h>
+#include "main.h"
+#include "server.h"
 
 int main(int argc, char* argv[])
 {
-	int port = 5001;
 	int i, option;
 
 	FILE *configFile;
@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 				configPath = optarg; //Przypisz sciezke do pliku konfiguracyjnego
 				break;
 			case 'p':
-				port = atoi(optarg); //Przypisz port nasluchu
+				global_port = atoi(optarg); //Przypisz port nasluchu
 				break;
 			case '?':
 				if (optopt == "c" || optopt == "p" )
@@ -50,10 +50,19 @@ int main(int argc, char* argv[])
 		fprintf(stderr,"BLAD: Nie moge odczytac pliku konfiguracyjnego: %s\n", configPath);
 		exit(1);
 	}
+	
+	if(global_port == -1)
+	{
+		global_port = 5001;
+		printf("Domyslny port %d\n", global_port);
+	}
 
 	printf("Czytam konfiguracje z: %s\n" , configPath );
-	printf("Nasłuchuje na porcie: %d\n", port);
-
+	pthread_t server_thread;
+	if(pthread_create( & server_thread, NULL, listenMessages, NULL)){
+		fprintf(stderr, "Error starting server thread\n");
+		exit(1);
+	}
 	mainLoop( configFile );
 
 	fclose(configFile);
@@ -179,8 +188,6 @@ int findNode( char * name, char * ip , int port )
 
 	for( i=0 ; i< nodeCount ; i++ )
 	{
-	//	if( node[i].name != NULL )
-	//		if( strcmp(name, node[i].name) == 0 )  return i;
 		
 		if( node[i].ip != NULL )
 			if( strcmp(ip, node[i].ip) == 0 ) 
