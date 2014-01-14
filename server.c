@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "server.h"
+#include "message.h" 
 
 extern int global_port;
 
@@ -20,7 +21,29 @@ int mystrcmp(char const* s1, char const* s2, int n){
   }
   return 1;
 }
-
+/*
+void processJson(char* in, int size)
+{
+	int i;
+	char type[50], clock[9];
+	int found_open = -1;
+	int found_type = -1;
+	int found_clock= -1;
+	int found_close= -1;
+	for(i = 0; i < size ; i++)
+	{
+		//first we look for opening bracket
+		if( in[i] == "{" ) find_open = i;
+		//look for a : opening for clock value...
+		else if( in[i] == ":" )
+		{
+			if(find_type > 0) find_clock = i;
+			else find_type = i;
+		}
+		else if( in[i] != "," && in[i] != "}" )
+	}
+}
+*/
 void *receiveMessage(void *fd_void_ptr)
 {
     int sock = (*(int *)fd_void_ptr);	//get socket file descriptor
@@ -29,21 +52,56 @@ void *receiveMessage(void *fd_void_ptr)
 
     int n;
     char buffer[256];
+    char rest[256];
+    char *token,*json;
+
+    Message * m; //pointer to message
+
+
 
     do 
     {
 	bzero(buffer,256);		//zeruj buffer
+	bzero(rest,256);
         n = read(sock,buffer,255);	//odczytaj z bufora
         if (n < 0)
         {
             fprintf(stderr, "THREAD[%d]: ERROR reading from socket - exiting", sock);
             return NULL;
         }
+	
+	// Token will point to end of json.
+	token = strtok(buffer, "}");
+	token++;
+	m = (Message *)malloc(sizeof(Message));
+	json = (char *)malloc( n );
+	strcpy(json,token);
+	m->json = json;
 
+	token = strtok(NULL,"");
+	if(token != NULL) strcpy(rest,token);
 
-        printf("THREAD[%d]: Here is the message: %s \n",sock ,buffer);
+        printf("THREAD[%d]: Here is the message: %s \nRest is: %s\n",sock ,m->json, rest);
 	fflush(stdout);
 
+	token = strtok(m->json,",:");
+	token = strtok(NULL,",:");
+
+	if( strcmp(token, "ok") == 0 ) m->type = 1;
+	else m->type = 0;
+
+	printf("type: %d\n", m->type);
+
+	token = strtok(NULL, ",:");
+	token = strtok(NULL, ",:");
+	
+	m->clock = atoi(token);
+	printf("clock: %d\n", m->clock);
+
+
+	//temporary
+	free(json);
+	free(m);
 
         n = write(sock,"Acknowledged",18);
         if (n < 0) 
@@ -51,6 +109,7 @@ void *receiveMessage(void *fd_void_ptr)
             fprintf(stderr, "THREAD[%d]: ERROR writing to socket", sock);
             exit(1);
 	}	
+
     }
     while( mystrcmp( "exit" , buffer , 4 ) != 1 );
 
