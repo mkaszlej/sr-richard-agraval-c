@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#include "server.h"
+#include "communication.h"
 #include "message.h" 
 
 extern int global_port;
@@ -48,7 +48,7 @@ void *receiveMessage(void *fd_void_ptr)
 {
     int sock = (*(int *)fd_void_ptr);	//get socket file descriptor
 
-    printf("NEW THREAD[%d]: Receiving Message\n", sock);
+    printf("SERVER THREAD[%d]: Receiving Message\n", sock);
 
     int n;
     char buffer[256];
@@ -57,10 +57,9 @@ void *receiveMessage(void *fd_void_ptr)
 
     Message * m; //pointer to message
 
-
-
-    do 
-    {
+//	TODO: jak z utrzymywaniem połączenia?
+//    do 
+//    {
 	bzero(buffer,256);		//zeruj buffer
 	bzero(rest,256);
         n = read(sock,buffer,255);	//odczytaj z bufora
@@ -70,6 +69,8 @@ void *receiveMessage(void *fd_void_ptr)
             return NULL;
         }
 	
+	printf("BUFFER: %s\n",buffer);
+	
 	// Token will point to end of json.
 	token = strtok(buffer, "}");
 	token++;
@@ -78,7 +79,7 @@ void *receiveMessage(void *fd_void_ptr)
 	strcpy(json,token);
 	m->json = json;
 
-	token = strtok(NULL,"");
+	token = strtok(NULL,"}");
 	if(token != NULL) strcpy(rest,token);
 
         printf("THREAD[%d]: Here is the message: %s \nRest is: %s\n",sock ,m->json, rest);
@@ -110,11 +111,14 @@ void *receiveMessage(void *fd_void_ptr)
             exit(1);
 	}	
 
-    }
-    while( mystrcmp( "exit" , buffer , 4 ) != 1 );
+
+//    }
+//    while( mystrcmp( "exit" , buffer , 4 ) != 1 );
 
     close(sock);
     printf("THREAD[%d] FINISHED ITS DUTY\n", sock);
+
+	free(sock);
 
     return NULL;
 
@@ -148,6 +152,7 @@ void *listenMessages(void *x_void_ptr)
          perror("ERROR on binding");
          exit(1);
     }
+    
     /* Now start listening for the clients, here 
      * process will go in sleep mode and will wait 
      * for the incoming connection
@@ -159,7 +164,7 @@ void *listenMessages(void *x_void_ptr)
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	
-	printf("[SERVERSOCKET:%d] Nawiązano połączenie \n", global_port);
+		printf("[SERVERSOCKET:%d] Nawiązano połączenie \n", global_port);
 
         if (newsockfd < 0)
         {
@@ -168,14 +173,18 @@ void *listenMessages(void *x_void_ptr)
         }
 
 
-	/* this variable is our reference to the second thread */
-	pthread_t process_thread;
-
-	/* create a second thread which executes inc_x(&x) */
-	if(pthread_create(& process_thread, NULL, receiveMessage, &newsockfd)) {
-		fprintf(stderr, "Error creating thread\n");
-		exit(1);
-	}
+		/* this variable is our reference to the second thread */
+		pthread_t process_thread;
+		
+		int *socket_fd = (int*)malloc(sizeof(int));
+		*(socket_fd) = newsockfd;
+		
+		/* create a second thread which executes inc_x(&x) */
+		if(pthread_create(& process_thread, NULL, receiveMessage, socket_fd)) {
+			fprintf(stderr, "Error creating thread\n");
+			exit(1);
+		}
+		//pthread_detach(process_thread);
 
     } /* end of while */
 

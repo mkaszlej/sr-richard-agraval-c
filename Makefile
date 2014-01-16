@@ -1,14 +1,12 @@
 CC=gcc
-CFLAGS= -Wall
+CFLAGS=  -g
 LDFLAGS=
 
-all: richard-agravala server
-		
-richard-agravala: main.c client.c client.h
-	clear; $(CC) $(CFLAGS) main.c client.c -o richard-agravala 
-
-server: server.c
-	$(CC) $(CFLAGS) server.c -o server
+all: richard-agravala 
 	
+	
+richard-agravala: main.h communication.h message.h 
+	clear; $(CC) $(CFLAGS) main.c server.c client.c -lpthread -o test 
+
 clean:
 	rm -rf *.o server richard-agravala
