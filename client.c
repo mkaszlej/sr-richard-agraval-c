@@ -23,7 +23,7 @@ void * sendBroadcast(void * json_ptr)
 		return;
 	}
 	else
-		printf("SEND BROADCAST: message: %s \n", json);
+		printf("[%d]SEND BROADCAST: message: %s \n", get_clock(), json);
 
     int sockfd, n;
     struct sockaddr_in serv_addr;
@@ -75,7 +75,7 @@ void * sendBroadcast(void * json_ptr)
 			continue;
 		}
 		else
-			printf("SEND BROADCAST[%d] - send to %s|%s|%d \n",i, node[i].name, node[i].ip, node[i].port);
+			printf("[%d] SEND BROADCAST[%d] - send to %s|%s|%d \n",get_clock(), i, node[i].name, node[i].ip, node[i].port);
     
 		/* TODO: CHECK IF WE NEED RESPONSE...
 		 * Now read server response 

@@ -51,7 +51,7 @@ void *receiveMessage(void *fd_void_ptr)
 	token = strtok(NULL,"}");
 	if(token != NULL) strcpy(rest,token);
 
-    printf("THREAD[%d]: Here is the message: %s \nRest is: %s\n",sock ,m->json, rest);
+    printf("[%d]SERVER[%d] json: {%s} \nRest is: %s\n", get_clock(), sock ,m->json, rest);
 
 	fflush(stdout);
 
@@ -68,6 +68,10 @@ void *receiveMessage(void *fd_void_ptr)
 	
 	m->clock = atoi(token);
 	printf("clock: %d\n", m->clock);
+
+	/*Zwieksz zegar*/
+	update_clock(m->clock);
+	
 
 	//temporary
 	free(json);
@@ -86,7 +90,7 @@ void *receiveMessage(void *fd_void_ptr)
 
     //close(sock);
 //	shutdown(sock,0);
-    printf("THREAD[%d] FINISHED ITS DUTY\n", sock);
+    printf("[%d] SERVER[%d] FINISHED ITS DUTY\n", get_clock(), sock);
 
     return NULL;
 

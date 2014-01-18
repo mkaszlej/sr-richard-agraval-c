@@ -16,11 +16,20 @@ void *sendMessage(void *message_ptr);
 //-------TIMER--------
 
 //Get logic timer value
-int getCurrentTime();
+int get_clock();
 
 //Update logic timer with received message clock
-int updateTime(int clock);
+int update_clock(int new);
 
 //Increment time by one
-int incrementTime();
+int increment_clock();
+
+//Data to sending thread
+typedef struct{
+	int node_id;
+	char * ip;
+	int port;
+	char * json;
+	int local_clock;
+} send_thread_data;
 #endif
