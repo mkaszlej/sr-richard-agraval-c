@@ -9,44 +9,9 @@
 
 extern int global_port;
 
-int mystrcmp(char const* s1, char const* s2, int n){
-  int i;
-  for(i=0; i < n; ++i){
-    unsigned char c1 = (unsigned char)(s1[i]);
-    unsigned char c2 = (unsigned char)(s2[i]);
-    if(tolower(c1) != tolower(c2))
-      return 0;
-    if(c1 == '\0' || c2 == '\0')
-      break;
-  }
-  return 1;
-}
-/*
-void processJson(char* in, int size)
-{
-	int i;
-	char type[50], clock[9];
-	int found_open = -1;
-	int found_type = -1;
-	int found_clock= -1;
-	int found_close= -1;
-	for(i = 0; i < size ; i++)
-	{
-		//first we look for opening bracket
-		if( in[i] == "{" ) find_open = i;
-		//look for a : opening for clock value...
-		else if( in[i] == ":" )
-		{
-			if(find_type > 0) find_clock = i;
-			else find_type = i;
-		}
-		else if( in[i] != "," && in[i] != "}" )
-	}
-}
-*/
 void *receiveMessage(void *fd_void_ptr)
 {
-    int sock = (*(int *)fd_void_ptr);	//get socket file descriptor
+    int sock = (*(int *)fd_void_ptr);	//copy socket file descriptor to local var
 
     printf("SERVER THREAD[%d]: Receiving Message\n", sock);
 
@@ -62,14 +27,18 @@ void *receiveMessage(void *fd_void_ptr)
 //    {
 	bzero(buffer,256);		//zeruj buffer
 	bzero(rest,256);
-        n = read(sock,buffer,255);	//odczytaj z bufora
-        if (n < 0)
-        {
-            fprintf(stderr, "THREAD[%d]: ERROR reading from socket - exiting", sock);
-            return NULL;
-        }
-	
-	printf("BUFFER: %s\n",buffer);
+	n = read(sock,buffer,255);	//odczytaj z bufora
+	if (n < 0)
+	{
+		fprintf(stderr, "THREAD[%d]: ERROR reading from socket - exiting\n", sock);
+		return NULL;
+	}
+	else if (n == 0)
+	{
+		fprintf(stderr, "THREAD[%d]: ERROR nothing to read from socket\n", sock);
+		return NULL;
+	}
+	printf("BUFFER:%s|\n",buffer);
 	
 	// Token will point to end of json.
 	token = strtok(buffer, "}");
@@ -82,7 +51,8 @@ void *receiveMessage(void *fd_void_ptr)
 	token = strtok(NULL,"}");
 	if(token != NULL) strcpy(rest,token);
 
-        printf("THREAD[%d]: Here is the message: %s \nRest is: %s\n",sock ,m->json, rest);
+    printf("THREAD[%d]: Here is the message: %s \nRest is: %s\n",sock ,m->json, rest);
+
 	fflush(stdout);
 
 	token = strtok(m->json,",:");
@@ -99,7 +69,6 @@ void *receiveMessage(void *fd_void_ptr)
 	m->clock = atoi(token);
 	printf("clock: %d\n", m->clock);
 
-
 	//temporary
 	free(json);
 	free(m);
@@ -115,10 +84,9 @@ void *receiveMessage(void *fd_void_ptr)
 //    }
 //    while( mystrcmp( "exit" , buffer , 4 ) != 1 );
 
-    close(sock);
+    //close(sock);
+//	shutdown(sock,0);
     printf("THREAD[%d] FINISHED ITS DUTY\n", sock);
-
-	free(sock);
 
     return NULL;
 
@@ -176,11 +144,10 @@ void *listenMessages(void *x_void_ptr)
 		/* this variable is our reference to the second thread */
 		pthread_t process_thread;
 		
-		int *socket_fd = (int*)malloc(sizeof(int));
-		*(socket_fd) = newsockfd;
+		int socket_fd = newsockfd;
 		
 		/* create a second thread which executes inc_x(&x) */
-		if(pthread_create(& process_thread, NULL, receiveMessage, socket_fd)) {
+		if(pthread_create(& process_thread, NULL, receiveMessage, &socket_fd)) {
 			fprintf(stderr, "Error creating thread\n");
 			exit(1);
 		}

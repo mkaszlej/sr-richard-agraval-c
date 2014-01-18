@@ -88,6 +88,7 @@ void * sendBroadcast(void * json_ptr)
 		}
 		printf("%s\n",buffer);*/
 		//close(sockfd);
+		shutdown(sockfd,1);
     }
     
     return;

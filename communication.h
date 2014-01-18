@@ -13,4 +13,14 @@ void *sendBroadcast(void *json_ptr);
 //Send message
 void *sendMessage(void *message_ptr);
 
+//-------TIMER--------
+
+//Get logic timer value
+int getCurrentTime();
+
+//Update logic timer with received message clock
+int updateTime(int clock);
+
+//Increment time by one
+int incrementTime();
 #endif
