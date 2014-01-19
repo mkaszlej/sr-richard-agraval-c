@@ -10,7 +10,8 @@
 //struktura zawierajaca adres ip i port wezla
 typedef struct {
 	char name[10];
-	char ip[16];
+	char ip_name[16];
+	long ip;
 	int port;
 	char ok;
 } nodeAddress;
@@ -26,7 +27,7 @@ void mainLoop();
 //zarzadzanie wezlami
 int addNode( char *name, char * ip, int port ); //dodaj nowy wezel
 //int removeNode( int node ); //usun wezel
-int findNode( char *name, char *ip, int port ); //zwraca indeks
+int find_node( long ip ); //zwraca indeks
 
 //wyslij broadcast
 void *broadcast();
@@ -38,10 +39,9 @@ int parseInput(int argc , char ** argv);
 int parseConfig( FILE * );
 int parseConfigLine(char *);
 
-//logowanie
-log(char *);
-
-//void * client( void * ptr );
+void reset_node_ok( int );
+void set_node_ok( int );
+int is_node_ok( int );
 
 /* Error handling */
 void terminate();

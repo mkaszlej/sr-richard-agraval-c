@@ -26,9 +26,13 @@ int  config_last_modified;
 
 //mutex
 sem_t mutex;
+sem_t node_mutex;
 
 //global waiting flag
 int waiting;
+
+//global waiting start time
+int waiting_clock;
 
 int main(int argc, char* argv[])
 {
@@ -38,6 +42,7 @@ int main(int argc, char* argv[])
 
 	/* Inicjalizuj mutex */
 	sem_init(&mutex, 0, 1);
+	sem_init(&node_mutex, 0, 1);
 
 	/* Ustaw flagi */
 	waiting = 0;
@@ -118,15 +123,18 @@ void *broadcast()
 	int local_clock, i;
 	char * json;
 	
+	/* Reset all node ok */
+	for(i=0; i<nodeCount; i++) reset_node_ok(i);
+	
 	/* Ustaw flagę oczekiwania */
 	waiting = 1;
 	
 	/* Pobierz czas zgłoszenia */
-	local_clock = get_clock();
+	waiting_clock = get_clock();
 	
 	/* Utwórz wysyłanego jsona */
 	json = malloc(30*sizeof(char));
-	sprintf(m.json,"{type:\"order\",clock:%d}\0", local_clock );
+	sprintf(json,"{type:\"order\",clock:%d}\0", waiting_clock );
 
 	for(i=0 ; i<nodeCount ; i++)
 	{
@@ -134,15 +142,15 @@ void *broadcast()
 		sd = (send_thread_data*)malloc(sizeof(send_thread_data));
 		sd->node_id = i;
 		sd->json = json;
-		sd->ip = node[i].ip;
+		sd->ip = node[i].ip_name;
 		sd->port = node[i].port;
-		sd->local_clock = local_clock;
+		sd->ok = 0;
 		
-		if(pthread_create( & send_thread[i], NULL, sendMessage, sd))
+		if(pthread_create( & send_thread[i], NULL, send_message, sd))
 		{
 			fprintf(stderr, "[%d]Error starting %d client thread\n", get_clock(), i);
 			free(sd);
-			terminate();
+			//terminate();
 		}
 	}
 
@@ -150,9 +158,40 @@ void *broadcast()
 	for(i=0; i<nodeCount; i++)
 		pthread_join(send_thread[i], NULL);
 
+	//Set flag to 0
+	waiting = 0;
+
 	free(json);
 }
 
+int is_node_ok( int node_id )
+{
+	int ret=0;
+	sem_wait (&node_mutex);
+		if( node[node_id].ok == 1 )	ret=1;
+	sem_post (&node_mutex);
+	return ret;
+}
 
+void set_node_ok( int node_id )
+{
+	sem_wait (&node_mutex);
+		node[node_id].ok = 1;
+	sem_post (&node_mutex);
+}
 
+void reset_node_ok( int node_id )
+{
+	sem_wait (&node_mutex);
+		node[node_id].ok = 0;
+	sem_post (&node_mutex);
+}
+
+int find_node( long ip )
+{
+		int i;
+		for(i=0; i<nodeCount; i++)
+			if(node[i].ip == ip) return i;
+		return -1;
+}
 

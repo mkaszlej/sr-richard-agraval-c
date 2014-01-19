@@ -11,8 +11,11 @@ void *receiveMessage(void *socket_fd_ptr);
 void *sendBroadcast(void *json_ptr);
 
 //Send message
-void *sendMessage(void *message_ptr);
+void *send_message(void *message_ptr);
 
+void *send_response(int sock);
+
+void *add_to_waiting_queue(int sock, long ip);
 //-------TIMER--------
 
 //Get logic timer value
@@ -30,6 +33,13 @@ typedef struct{
 	char * ip;
 	int port;
 	char * json;
-	int local_clock;
+	int ok;
 } send_thread_data;
+
+//Data to receiving thread
+typedef struct{
+	int sockfd;
+	int port;
+	long ip;
+} receive_thread_data;
 #endif

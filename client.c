@@ -46,7 +46,7 @@ void * sendBroadcast(void * json_ptr)
 			continue;
 		}
 
-		server = gethostbyname(node[i].ip);
+		server = gethostbyname(node[i].ip_name);
 		if (server == NULL) {
 			fprintf(stderr,"SEND BROADCAST[%d] - ERROR, no such host: %s\n", i, node[i].ip );
 //			return;
@@ -57,6 +57,8 @@ void * sendBroadcast(void * json_ptr)
 		serv_addr.sin_family = AF_INET;
 		bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
 		serv_addr.sin_port = htons(node[i].port);
+
+		printf("TEST PORT: %d\n", serv_addr.sin_port);
 
 		/* Now connect to the server */
 		if (connect(sockfd,&serv_addr,sizeof(serv_addr)) < 0) 

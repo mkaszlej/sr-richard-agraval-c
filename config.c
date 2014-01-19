@@ -155,7 +155,8 @@ int addNode( char *name, char *ip, int port)
 {
 	printf("DODAJE NODE: %s IP: %s:%d\n", name, ip, port);
 	strcpy( node[nodeCount].name , name);
-	strcpy( node[nodeCount].ip , ip );
+	strcpy( node[nodeCount].ip_name , ip );
+	node[nodeCount].ip = (long)inet_addr(ip);
 	node[nodeCount].port = port;
 	nodeCount++;
 }

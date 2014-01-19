@@ -9,6 +9,7 @@
 extern nodeAddress node[];
 extern int nodeCount;
 extern int global_port;
+extern int waiting_clock;
 
 void * send_message(void * send_thread_data_ptr)
 {
@@ -24,11 +25,11 @@ void * send_message(void * send_thread_data_ptr)
     char *json = data->json;
 	if(json == NULL)
 	{
-		fprintf(stderr,"[%d][%d] SEND MESSAGE: received null message\n", get_clock(), data->local_clock );
+		fprintf(stderr,"[%d][%d] SEND MESSAGE: received null message\n", get_clock(), waiting_clock );
 		return;
 	}
 	else
-		printf("[%d][%d] SEND MESSAGE: message: %s \n", get_clock(), data->local_clock, json);
+		printf("[%d][%d] SEND MESSAGE: message: %s \n", get_clock(), waiting_clock, json);
 
 	/* copy message to buffer */
     char buffer[30];
@@ -41,14 +42,14 @@ void * send_message(void * send_thread_data_ptr)
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) 
 	{
-		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR opening socket for ip: %s:%d\n", get_clock(), data->local_clock, data->ip, data->port);
+		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR opening socket for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
 		return NULL;
 	}
 
 	/* get host name*/
 	server = gethostbyname(data->ip);
 	if (server == NULL) {
-		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR no such host - ip: %s:%d\n", get_clock(), data->local_clock, data->ip, data->port);
+		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR no such host - ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
 		return NULL;
 	}
 
@@ -60,7 +61,7 @@ void * send_message(void * send_thread_data_ptr)
 	/* now connect to the server */
 	if (connect(sockfd,&serv_addr,sizeof(serv_addr)) < 0) 
 	{
-		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR connecting for ip: %s:%d\n", get_clock(), data->local_clock, data->ip, data->port);
+		fprintf(stderr, "[%d][%d] SEND MESSAGE: ERROR connecting for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
 		return NULL;
 	}	
 
@@ -68,31 +69,87 @@ void * send_message(void * send_thread_data_ptr)
 	n = write(sockfd,buffer,strlen(buffer));
 	if (n < 0) 
 	{
-		fprintf(stderr,"[%d][%d] SEND MESSAGE: ERROR writing to socket for ip: %s:%d\n", get_clock(), data->local_clock, data->ip, data->port);
+		fprintf(stderr,"[%d][%d] SEND MESSAGE: ERROR writing to socket for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
 		return NULL;
 	}
 	else
-		printf("[%d][%d] SEND MESSAGE: message %s send to ip: %s:%d\n", get_clock(), data->local_clock, data->json, data->ip, data->port);
+		printf("[%d][%d] SEND MESSAGE: message %s send to ip: %s:%d\n", get_clock(), waiting_clock, data->json, data->ip, data->port);
     
 	/* TODO: CHECK IF WE NEED RESPONSE... */
-	await_response(sock_fd, data);
+	await_response(sockfd, data);
 
     return NULL;
 }
 
-void await_response(int sock_fd, send_thread_data * data)
+void await_response(int sockfd, send_thread_data * data)
 {
-
+	int type, clock, n;
 	/* allocate buffer */
     char buffer[256];
+    char * token;
 	bzero(buffer,256);
-	
-	/* Now read server response */
-	n = read(sockfd,buffer,255);
-	if (n < 0) 
-	{
-		fprintf(stderr,"[%d][%d] SEND MESSAGE AWAIT RESPONSE: ERROR reading from for ip: %s:%d\n", get_clock(), data->local_clock, data->ip, data->port);
-		return NULL;
-	}
 
+	/* do until we or someone else set node ok to 1 */
+	while( !is_node_ok(data->node_id) )
+	{
+
+		/* Now read server response */
+		n = read(sockfd,buffer,255);
+
+		/* Error may indicate closed socket etc. - we ignore it */
+		if (n < 0) 
+		{
+			fprintf(stderr,"[%d][%d] SEND MESSAGE AWAIT RESPONSE: ERROR reading from for ip: %s:%d\n", get_clock(), 	waiting_clock, data->ip, data->port);
+			sleep(0.3);
+			continue;
+			//return NULL;
+		}
+		
+		//nothing to read...
+		if(n==0){sleep(0.3); continue;}
+
+		// Token will point to end of json.
+		token = strtok(buffer, "}");
+		
+		//If null continue to next iteration
+		if(token == NULL){ sleep(0.3); continue; }
+
+		//We ommit opening {
+		token++;
+		
+		//Allocate buffer for answer
+		char *json = (char *)malloc( n );
+		strcpy(json,token);
+
+		//get type
+		token = strtok(json,",:");
+		token = strtok(NULL,",:");
+		if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
+		else type = 0;
+		if(type != 1){ 
+			//we received something else - not ok!
+			fprintf(stderr,"[%d][%d] SEND MESSAGE AWAIT RESPONSE: ERROR not OK received from ip: %s:%d\ntoken: %s type: %d\n", get_clock(), waiting_clock, data->ip, data->port, token, type);
+			sleep(0.3);
+			continue;
+		}
+
+		//get clock
+		token = strtok(NULL, ",:");
+		token = strtok(NULL, ",:");
+		clock = atoi(token);
+		
+		//update clock with received value
+		update_clock(clock);
+		
+		printf("[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), sockfd, type, clock);
+		
+		//we get ok so set node to ok
+		set_node_ok(data->node_id);
+		
+		free(json);
+		
+		fflush(stdout);
+		
+	}
+	
 }
