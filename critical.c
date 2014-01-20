@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <semaphore.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include "main.h"
+#include "communication.h"
 
 extern nodeAddress node[];
 extern int nodeCount;

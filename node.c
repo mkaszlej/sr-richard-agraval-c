@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include "main.h"
+#include "communication.h"
 
 extern nodeAddress node[];
 extern int nodeCount;

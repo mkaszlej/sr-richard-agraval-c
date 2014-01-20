@@ -1,6 +1,7 @@
 #ifndef GLOBALS_H_INCLUDED
 #define GLOBALS_H_INCLUDED
 
+#include <semaphore.h>
 
 //Tablica z adresami wezlow:
 nodeAddress node[MAX_NODES];
