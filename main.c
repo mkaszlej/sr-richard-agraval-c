@@ -158,8 +158,7 @@ void *broadcast()
 	for(i=0; i<nodeCount; i++)
 		pthread_join(send_thread[i], NULL);
 
-	//Set flag to 0
-	waiting = 0;
+	critial_section();
 
 	free(json);
 }
@@ -193,5 +192,42 @@ int find_node( long ip )
 		for(i=0; i<nodeCount; i++)
 			if(node[i].ip == ip) return i;
 		return -1;
+}
+
+void * critial_section()
+{
+	await_critical_section();
+	enter_critical_section();
+	leave_critical_section();
+}
+
+void * await_critical_section()
+{
+	int i,access=0;
+	printf("[%d]AWAITING CRITIAL SECTION:\n******************************\n", get_clock());
+	while(!access)
+	{
+		access = 1;
+		for(i = 0 ; i < nodeCount ; i++ )
+			if( node[i].ok != 1 ) access = 0;
+		sleep(0.3);
+	}
+}
+
+void * enter_critical_section()
+{
+	printf("[%d]CRITICAL_SECTION\n", get_clock() );
+	sleep(20);
+}
+
+void * leave_critical_section()
+{
+	int i;
+	/* reset flag */
+	waiting=0;
+	/* reset all nodes */
+	for(i; i<nodeCount; i++)
+		node[i].ok = 0;
+	printf("[%d]LEFT CRITICAL_SECTION\n******************************\n", get_clock() );
 }
 

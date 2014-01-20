@@ -16,7 +16,7 @@ void *add_to_waiting_queue(int sock, long ip)
 	int node_id = find_node( ip );
 	if(node_id == -1)
 	{
-		fprintf(stderr, "[%d]RM wq[%d]: ERROR no such node in config ip:%s\n", get_clock(), sock, inet_ntoa(ip) );
+		fprintf(stderr, "[%d]RM wq[%d]: ERROR no such node in config ip:%s\n", get_clock(), sock, ip );
 		close(sock);
 		return;
 	} 
@@ -59,14 +59,19 @@ void *receiveMessage(void *fd_void_ptr)
 	int port = ra->port;   //sender port
 	long ip = ra->ip;		//senter ip treated with inet_addr()
 
-    printf("[%d]RM[%d]: Receiving Message from %s:%d\n", get_clock(), sock, inet_ntoa(ip), port );
-
     int n, type, clock;
     char buffer[256];
     char *token,*json;
 
+	printf("[%d]RM[%d]: Receiving Messagee from %d:%d\n", get_clock(), sock, ip, port );
+
 	bzero(buffer,256);		//zeruj buffer
+
 	n = read(sock,buffer,255);	//odczytaj z bufora
+	
+	printf("\ntest\n");	
+		fflush(stdout);
+	
 	if (n < 0)
 	{
 		fprintf(stderr, "[%d]RM[%d]: ERROR reading from socket - exiting\n", get_clock(), sock);
@@ -77,7 +82,10 @@ void *receiveMessage(void *fd_void_ptr)
 		fprintf(stderr, "[%d]RM[%d]: ERROR nothing to read from socket\n", get_clock(), sock);
 		return NULL;
 	}
-	//printf("BUFFER:%s|\n",buffer);
+
+	printf("BUFFER:%s|\n",buffer);
+	
+		
 	
 	// Token will point to end of json.
 	token = strtok(buffer, "}");
@@ -123,12 +131,12 @@ void *receiveMessage(void *fd_void_ptr)
 		int node_id = find_node( ip );
 		if( node_id == -1 )
 		{
-			fprintf(stderr, "[%d]RM[%d]: ERROR no such node in config ip:%s\n", get_clock(), sock, inet_ntoa(ip) );
+			fprintf(stderr, "[%d]RM[%d]: ERROR no such node in config ip:%d\n", get_clock(), sock, ip );
 			close(sock);
 		}
 		else
 		{
-			printf("[%d]RM[%d]: RECEIVED OK FROM NODE: %d IP: %s\n", get_clock(), sock, node_id, inet_ntoa(ip));
+			printf("[%d]RM[%d]: RECEIVED OK FROM NODE: %d IP: %d\n", get_clock(), sock, node_id, ip );
 			set_node_ok(node_id);
 			close(sock);
 		}
@@ -211,7 +219,7 @@ void *listenMessages(void *x_void_ptr)
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	
-		printf("[%d]RM[%d] Nawiązano połączenie port: %d \n", get_clock(), newsockfd, global_port);
+		printf("[%d]RM[%d] Connection started port: %d \n", get_clock(), newsockfd, global_port);
 
         if (newsockfd < 0)
         {
@@ -227,9 +235,8 @@ void *listenMessages(void *x_void_ptr)
 		rd->sockfd = newsockfd;
 		rd->ip = cli_addr.sin_addr.s_addr;
 		rd->port = ntohs(cli_addr.sin_port);
-		
-		
-		printf("[%d]RM[%d] rd->ip:%d ip:%s port:%d;rd->port: %d\n",  get_clock(), newsockfd, rd->ip, inet_ntoa(cli_addr.sin_addr), rd->port, ntohs(cli_addr.sin_port) );
+			
+		//printf("[%d]RM[%d] rd->ip:%d port:%d;rd->port: %d\n",  get_clock(), newsockfd, rd->ip, rd->port, ntohs(cli_addr.sin_port) );
 		
 		/* create a second thread which executes inc_x(&x) */
 		if(pthread_create(& process_thread, NULL, receiveMessage, rd)) {

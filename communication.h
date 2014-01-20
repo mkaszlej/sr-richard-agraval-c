@@ -41,5 +41,6 @@ typedef struct{
 	int sockfd;
 	int port;
 	long ip;
+	char * ip_name;
 } receive_thread_data;
 #endif

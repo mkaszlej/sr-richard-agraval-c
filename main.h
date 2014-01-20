@@ -43,6 +43,12 @@ void reset_node_ok( int );
 void set_node_ok( int );
 int is_node_ok( int );
 
+//critical section
+void * critial_section();
+void * await_critical_section();
+void * enter_critical_section();
+void * leave_critical_section();
+
 /* Error handling */
 void terminate();
 

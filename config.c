@@ -38,7 +38,7 @@ void *configLoop( void * configPath_ptr )
 			config_last_modified = modTime;
 		}
 		
-	//	sleep(2);
+		sleep(2);
 	//	broadcast("not_ok");
 	}	
 	return 0;
