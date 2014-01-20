@@ -27,6 +27,7 @@ int  config_last_modified;
 //mutex
 sem_t mutex;
 sem_t node_mutex;
+sem_t waiting_mutex;
 
 //global waiting flag
 int waiting;
@@ -44,9 +45,10 @@ int main(int argc, char* argv[])
 	/* Inicjalizuj mutex */
 	sem_init(&mutex, 0, 1);
 	sem_init(&node_mutex, 0, 1);
+	sem_init(&waiting_mutex, 0, 1);
 
 	/* Ustaw flagi */
-	waiting = 0;
+	set_waiting(0);
 
 	/* Odczyt wejscia */
 	while ((option = getopt (argc, argv, "c:p:f:")) != -1)
@@ -90,9 +92,12 @@ int main(int argc, char* argv[])
 	}
 	else printf("Ustawiono port %d\n", global_port);
 	
-	if(force_close > 0)
+	if(force_close >= 0)
+	{
+		printf("Forcing fd: %d to close\n", force_close);
 		close(force_close);
-
+	}
+	
 	//START CONFIG FILE MONITORING THREAD
 	pthread_t config_monitor_thread;
 	if(pthread_create( & config_monitor_thread, NULL, configLoop, configPath))
@@ -134,7 +139,7 @@ void *broadcast()
 	for(i=0; i<nodeCount; i++) reset_node_ok(i);
 	
 	/* Ustaw flagę oczekiwania */
-	waiting = 1;
+	set_waiting(1);
 	
 	/* Pobierz czas zgłoszenia */
 	waiting_clock = get_clock();
@@ -231,10 +236,26 @@ void * leave_critical_section()
 {
 	int i;
 	/* reset flag */
-	waiting=0;
+	set_waiting(0);
 	/* reset all nodes */
 	for(i; i<nodeCount; i++)
 		node[i].ok = 0;
 	printf("[%d] *** LEFT CRITICAL_SECTION *** \n", get_clock() );
+}
+
+void set_waiting(int value)
+{
+	sem_wait (&waiting_mutex);
+		waiting = value;
+	sem_post (&waiting_mutex);
+}
+
+int get_waiting()
+{
+	int ret;
+	sem_wait (&waiting_mutex);
+		ret = waiting;
+	sem_post (&waiting_mutex);	
+	return ret;
 }
 

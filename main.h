@@ -49,6 +49,10 @@ void * await_critical_section();
 void * enter_critical_section();
 void * leave_critical_section();
 
+//waiting flag
+void set_waiting(int value);
+int get_waiting();
+
 /* Error handling */
 void terminate();
 
