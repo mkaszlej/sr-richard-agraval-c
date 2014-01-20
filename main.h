@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 
-
 //Maksymalna liczba wezlow
 #define MAX_NODES 10
 
@@ -14,34 +13,30 @@ typedef struct {
 	long ip;
 	int port;
 	char ok;
+	char active;
 } nodeAddress;
-
-int configModificationTime(); //Zrwaca > 0 jesli zmiany w pliku konfiguracyjnym
-
-//Wątek z pętlą monitorującą konfig
-void *configLoop( void *configPath_ptr );
 
 //Glowna petla programu
 void mainLoop();
 
 //zarzadzanie wezlami
-int addNode( char *name, char * ip, int port ); //dodaj nowy wezel
-//int removeNode( int node ); //usun wezel
+void add_node( char *name, char * ip, int port ); //dodaj nowy wezel
 int find_node( long ip ); //zwraca indeks
-
-//wyslij broadcast
-void *broadcast();
-
-//parsuj wejscie do programu
-int parseInput(int argc , char ** argv);
-
-//parsuj config
-int parseConfig( FILE * );
-int parseConfigLine(char *);
+void remove_node( int node ); //usun wezel
 
 void reset_node_ok( int );
 void set_node_ok( int );
 int is_node_ok( int );
+
+//Wątek z pętlą monitorującą konfig
+void *configLoop( void *configPath_ptr );
+//Zrwaca > 0 jesli zmiany w pliku konfiguracyjnym
+int configModificationTime();
+//parsuj wejscie do programu
+int parseInput(int argc , char ** argv);
+//parsuj config
+int parseConfig( FILE * );
+int parseConfigLine(char *);
 
 //critical section
 void * critial_section();
@@ -53,7 +48,7 @@ void * leave_critical_section();
 void set_waiting(int value);
 int get_waiting();
 
-/* Error handling */
-void terminate();
+//wyslij broadcast
+void *broadcast();
 
 #endif

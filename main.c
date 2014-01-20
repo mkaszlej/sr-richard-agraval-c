@@ -2,43 +2,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <semaphore.h>
+#include <netinet/in.h>
 #include "main.h"
 #include "communication.h"
-#include "message.h"
-
-
-#include <netinet/in.h>
-
-//Tablica z adresami wezlow:
-nodeAddress node[MAX_NODES];
-
-//Globalnie ustawiony port:
-int global_port = -1;
-
-//Indeks na pierwszy pusty element w tablicy node:
-int nodeCount = 0 ;     
-
-//Domyslny plik konfiguracyjny:
-static const char configDefault[] = "./config";
-
-//Sciezka do pliku konfiguracyjnego
-char *configPath = NULL; 
-
-//Czas ostatniej modyfikacji pliku config
-int  config_last_modified;
-
-//mutex
-sem_t mutex;
-sem_t node_mutex;
-sem_t waiting_mutex;
-
-//global waiting flag
-int waiting;
-
-//global waiting start time
-int waiting_clock;
-
-long local_address = -1;
+#include "globals.h"
 
 int main(int argc, char* argv[])
 {
@@ -189,87 +156,5 @@ void *broadcast()
 	free(json);
 }
 
-int is_node_ok( int node_id )
-{
-	int ret=0;
-	sem_wait (&node_mutex);
-		if( node[node_id].ok == 1 )	ret=1;
-	sem_post (&node_mutex);
-	return ret;
-}
 
-void set_node_ok( int node_id )
-{
-	sem_wait (&node_mutex);
-		node[node_id].ok = 1;
-	sem_post (&node_mutex);
-}
-
-void reset_node_ok( int node_id )
-{
-	sem_wait (&node_mutex);
-		node[node_id].ok = 0;
-	sem_post (&node_mutex);
-}
-
-int find_node( long ip )
-{
-		int i;
-		for(i=0; i<nodeCount; i++)
-			if(node[i].ip == ip) return i;
-		return -1;
-}
-
-void * critial_section()
-{
-	await_critical_section();
-	enter_critical_section();
-	leave_critical_section();
-}
-
-void * await_critical_section()
-{
-	int i,access=0;
-	printf("[%d] *** AWAITING CRITIAL SECTION: *** \n", get_clock());
-	while(!access)
-	{
-		access = 1;
-		for(i = 0 ; i < nodeCount ; i++ )
-			if( node[i].ok != 1 ) access = 0;
-		sleep(0.3);
-	}
-}
-
-void * enter_critical_section()
-{
-	printf("******************************\n[%d]CRITICAL_SECTION\n******************************\n", get_clock() );
-	sleep(10);
-}
-
-void * leave_critical_section()
-{
-	int i;
-	/* reset flag */
-	set_waiting(0);
-	/* reset all nodes */
-	for(i; i<nodeCount; i++)
-		node[i].ok = 0;
-	printf("[%d] *** LEFT CRITICAL_SECTION *** \n", get_clock() );
-}
-
-void set_waiting(int value)
-{
-	sem_wait (&waiting_mutex);
-		waiting = value;
-	sem_post (&waiting_mutex);
-}
-
-int get_waiting()
-{
-	int ret;
-	sem_wait (&waiting_mutex);
-		ret = waiting;
-	sem_post (&waiting_mutex);	
-	return ret;
-}
 

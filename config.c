@@ -127,7 +127,7 @@ int parseConfigLine(char *buffer)
 
 		//jesli nie ma takiego, to dodaj
 	//	if( findNode( name, ip, port ) == -1 )
-			addNode( name, ip, port );	
+			add_node( name, ip, port );	
 	//	else printf("LINIA JUZ ISTNIEJE: %s IP %s:%d = %d\n", name, ip, port, findNode( name, ip, port));
 
 	}
@@ -137,26 +137,4 @@ int parseConfigLine(char *buffer)
 
 }
 
-int findNode( char * name, char * ip , int port )
-{
-	int i;
 
-	for( i=0 ; i< nodeCount ; i++ )
-	{
-		
-		if( node[i].ip != NULL )
-			if( strcmp(ip, node[i].ip) == 0 ) 
-				if( node[i].port == port ) return i;
-	}
-	return -1;
-}
-
-int addNode( char *name, char *ip, int port)
-{
-	printf("DODAJE NODE: %s IP: %s:%d\n", name, ip, port);
-	strcpy( node[nodeCount].name , name);
-	strcpy( node[nodeCount].ip_name , ip );
-	node[nodeCount].ip = (long)inet_addr(ip);
-	node[nodeCount].port = port;
-	nodeCount++;
-}

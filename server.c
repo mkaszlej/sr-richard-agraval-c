@@ -4,9 +4,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
-#include "communication.h"
-#include "message.h" 
 #include <inttypes.h>
+#include "communication.h"
 
 extern int global_port;
 extern int waiting_clock;

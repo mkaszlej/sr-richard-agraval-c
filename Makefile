@@ -5,8 +5,8 @@ LDFLAGS=
 all: richard-agravala 
 	
 	
-richard-agravala: main.h communication.h message.h  
-	clear; $(CC) $(CFLAGS) main.c server.c client.c clock.c config.c send.c -lpthread -o test 
+richard-agravala: main.h communication.h globals.h
+	clear; $(CC) $(CFLAGS) main.c server.c client.c clock.c config.c send.c node.c critical.c -lpthread -o test 
 
 clean:
 	rm -rf *.o server richard-agravala
