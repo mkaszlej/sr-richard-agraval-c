@@ -85,6 +85,8 @@ int main(int argc, char* argv[])
 		printf("Domyslny port %d\n", global_port);
 	}
 	else printf("Ustawiono port %d\n", global_port);
+	
+	close(global_port);
 
 	//START CONFIG FILE MONITORING THREAD
 	pthread_t config_monitor_thread;
@@ -204,7 +206,7 @@ void * critial_section()
 void * await_critical_section()
 {
 	int i,access=0;
-	printf("[%d]AWAITING CRITIAL SECTION:\n******************************\n", get_clock());
+	printf("[%d] *** AWAITING CRITIAL SECTION: *** \n", get_clock());
 	while(!access)
 	{
 		access = 1;
@@ -216,7 +218,7 @@ void * await_critical_section()
 
 void * enter_critical_section()
 {
-	printf("[%d]CRITICAL_SECTION\n", get_clock() );
+	printf("******************************\n[%d]CRITICAL_SECTION\n******************************\n", get_clock() );
 	sleep(20);
 }
 
@@ -228,6 +230,6 @@ void * leave_critical_section()
 	/* reset all nodes */
 	for(i; i<nodeCount; i++)
 		node[i].ok = 0;
-	printf("[%d]LEFT CRITICAL_SECTION\n******************************\n", get_clock() );
+	printf("[%d] *** LEFT CRITICAL_SECTION *** \n", get_clock() );
 }
 

@@ -95,8 +95,7 @@ void await_response(int sockfd, send_thread_data * data)
 	while( !is_node_ok(data->node_id) )
 	{
 
-		sleep(0.3);
-
+	
 		/* Now read server response */
 		n = read(sockfd,buffer,255);
 
@@ -104,6 +103,7 @@ void await_response(int sockfd, send_thread_data * data)
 		if (n < 0) 
 		{
 			fprintf(stderr,"[%d]SM[%d]AWAIT RESPONSE: ERROR reading from for ip: %s:%d\n", get_clock(), 	waiting_clock, data->ip, data->port);
+			sleep(0.3);
 			continue;
 			//return NULL;
 		}
