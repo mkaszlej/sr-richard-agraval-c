@@ -37,6 +37,7 @@ int waiting_clock;
 int main(int argc, char* argv[])
 {
 	int i, option;
+	int force_close = -1;
 
 	FILE *configFile;
 
@@ -48,7 +49,7 @@ int main(int argc, char* argv[])
 	waiting = 0;
 
 	/* Odczyt wejscia */
-	while ((option = getopt (argc, argv, "c:p:")) != -1)
+	while ((option = getopt (argc, argv, "c:p:f:")) != -1)
  	{
 		switch(option)
 		{
@@ -58,8 +59,11 @@ int main(int argc, char* argv[])
 			case 'p':
 				global_port = atoi(optarg); //Przypisz port nasluchu
 				break;
+			case 'f':
+				force_close = atoi(optarg); //Przypisz port nasluchu
+				break;
 			case '?':
-				if (optopt == "c" || optopt == "p" )
+				if (optopt == "c" || optopt == "p" || optopt == "f" )
 					fprintf(stderr, "UWAGA: Opcja %c wymaga argumentu\n", optopt);
 				else if (isprint(optopt))
 					fprintf(stderr, "UWAGA: Nieznana opcja %c\n", optopt);
@@ -86,7 +90,8 @@ int main(int argc, char* argv[])
 	}
 	else printf("Ustawiono port %d\n", global_port);
 	
-	close(global_port);
+	if(force_close > 0)
+		close(force_close);
 
 	//START CONFIG FILE MONITORING THREAD
 	pthread_t config_monitor_thread;
