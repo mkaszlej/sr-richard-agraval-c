@@ -6,9 +6,11 @@
 #include <string.h>
 #include "communication.h"
 #include "message.h" 
+#include <inttypes.h>
 
 extern int global_port;
 extern int waiting_clock;
+extern long local_address;
 
 void *add_to_waiting_queue(int sock, long ip)
 {
@@ -63,6 +65,9 @@ void *receiveMessage(void *fd_void_ptr)
     int n, type, clock;
     char buffer[256];
     char *token,*json;
+
+	struct sockaddr *address = malloc(sizeof(struct sockaddr));
+
 
 	printf("[%d]RM[%d] Receiving Messagee from %d:%d\n", get_clock(), sock, ip, port );
 
@@ -160,18 +165,15 @@ void *receiveMessage(void *fd_void_ptr)
 			}
 			else if(clock == waiting_clock)
 			{
-				struct sockaddr *address = malloc(sizeof(struct sockaddr));
-				/* get local ip */
-				getsockname(sock, address, 25);
-				
-				if( ip <= inet_addr(address->sa_data) )
+			
+				if( ip <= local_address )
 				{
-						printf("[%d]RM[%d] WAITING, SAME TIME! MY IP LOWER -> SENDING OK to IP: %d\n", get_clock(), sock, ip );
+						printf("[%d]RM[%d] WAITING, SAME TIME! %d <= %d <- MY IP LOWER -> SENDING OK to IP: %d\n", get_clock(), sock, ip, local_address, ip );
 						send_response(sock);
 				}
 				else
 				{
-					printf("[%d]RM[%d] WAITING, SAME TIME! MY IP HIGHIER -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip );
+					printf("[%d]RM[%d] WAITING, SAME TIME! %d > %d <- MY IP HIGHIER -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip, local_address, ip );
 					add_to_waiting_queue(sock, ip);
 				}
 			}

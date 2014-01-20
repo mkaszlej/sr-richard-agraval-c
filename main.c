@@ -6,6 +6,9 @@
 #include "communication.h"
 #include "message.h"
 
+
+#include <netinet/in.h>
+
 //Tablica z adresami wezlow:
 nodeAddress node[MAX_NODES];
 
@@ -35,6 +38,8 @@ int waiting;
 //global waiting start time
 int waiting_clock;
 
+long local_address = -1;
+
 int main(int argc, char* argv[])
 {
 	int i, option;
@@ -51,7 +56,7 @@ int main(int argc, char* argv[])
 	set_waiting(0);
 
 	/* Odczyt wejscia */
-	while ((option = getopt (argc, argv, "c:p:f:")) != -1)
+	while ((option = getopt (argc, argv, "l:c:p:f:")) != -1)
  	{
 		switch(option)
 		{
@@ -64,8 +69,11 @@ int main(int argc, char* argv[])
 			case 'f':
 				force_close = atoi(optarg); //Przypisz port nasluchu
 				break;
+			case 'l':
+				local_address = inet_addr(optarg);
+				break;				
 			case '?':
-				if (optopt == "c" || optopt == "p" || optopt == "f" )
+				if (optopt == "c" || optopt == "p" || optopt == "f" || optopt == "l" )
 					fprintf(stderr, "UWAGA: Opcja %c wymaga argumentu\n", optopt);
 				else if (isprint(optopt))
 					fprintf(stderr, "UWAGA: Nieznana opcja %c\n", optopt);
@@ -96,6 +104,12 @@ int main(int argc, char* argv[])
 	{
 		printf("Forcing fd: %d to close\n", force_close);
 		close(force_close);
+	}
+	
+	if(local_address<0)
+	{
+		fprintf(stderr, "NO LOCAL IP ADDRESS SPECIFIED\n");
+		exit(1);
 	}
 	
 	//START CONFIG FILE MONITORING THREAD
@@ -229,7 +243,7 @@ void * await_critical_section()
 void * enter_critical_section()
 {
 	printf("******************************\n[%d]CRITICAL_SECTION\n******************************\n", get_clock() );
-	sleep(20);
+	sleep(10);
 }
 
 void * leave_critical_section()
