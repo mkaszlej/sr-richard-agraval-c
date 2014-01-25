@@ -11,26 +11,13 @@ extern int nodeCount;
 extern int nodeActive;
 extern sem_t node_mutex;
 
-
-/*int findNode( char * name, char * ip , int port )
-{
-	int i;
-
-	for( i=0 ; i< nodeCount ; i++ )
-	{
-		if( node[i].ip != NULL )
-			if( strcmp(ip, node[i].ip) == 0 ) 
-				if( node[i].port == port ) return i;
-	}
-	return -1;
-}*/
-
-
 int find_node( long ip )
 {
 		int i;
 		for(i=0; i<nodeCount; i++)
+		{
 			if(node[i].ip == ip) return i;
+		}
 		return -1;
 }
 
@@ -41,34 +28,45 @@ void add_node( char *name, char *ip, int port)
 	strcpy( node[nodeCount].ip_name , ip );
 	node[nodeCount].ip = (long)inet_addr(ip);
 	node[nodeCount].port = port;
+	node[nodeCount].active = 1;
+	sem_init(&node[nodeCount].node_mutex, 0, 1);
 	nodeCount++;
 	nodeActive++;
 }
 
 void remove_node( int node_id )
 {
+	//disable it
+	node[node_id].active = 0;
+	//keep it ok to break all current processes
+	node[node_id].ok = 1;
+	//decrement active node count 
+	nodeActive--;
+	
+	//TODO: set_waiting...? flag_resend?
+	
 	return;
 }
 
 int is_node_ok( int node_id )
 {
 	int ret=0;
-	sem_wait (&node_mutex);
-		if( node[node_id].ok == 1 )	ret=1;
-	sem_post (&node_mutex);
+	
+	//for disabled nodes always return ok
+	if( node[node_id].active == 0 ) ret = 1;
+	if( node[node_id].ok == 1 )	ret=1;
+	
 	return ret;
 }
 
 void set_node_ok( int node_id )
 {
-	sem_wait (&node_mutex);
 		node[node_id].ok = 1;
-	sem_post (&node_mutex);
 }
 
 void reset_node_ok( int node_id )
 {
-	sem_wait (&node_mutex);
-		node[node_id].ok = 0;
-	sem_post (&node_mutex);
+		//leave not active nodes with ok = 1
+		if(node[node_id].active == 1)
+			node[node_id].ok = 0;
 }

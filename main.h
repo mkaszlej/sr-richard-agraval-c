@@ -2,6 +2,7 @@
 #define MAIN_H_INCLUDED
 
 #include <stdio.h>
+#include <semaphore.h>
 
 //Maksymalna liczba wezlow
 #define MAX_NODES 10
@@ -14,6 +15,7 @@ typedef struct {
 	int port;
 	char ok;
 	char active;
+	sem_t node_mutex;
 } nodeAddress;
 
 //Glowna petla programu

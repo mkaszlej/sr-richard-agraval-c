@@ -80,6 +80,8 @@ void * send_message(void * send_thread_data_ptr)
 	await_response(sockfd, data);
 
 	close(sockfd);
+	/* we have to free malloced struct we received */
+	if(data!=NULL) free(data);
     return NULL;
 }
 
@@ -148,6 +150,7 @@ void await_response(int sockfd, send_thread_data * data)
 		//we get ok so set node to ok
 		set_node_ok(data->node_id);
 		
+		//free json that is parsed and no longer need
 		free(json);
 		fflush(stdout);
 		

@@ -111,6 +111,7 @@ void mainLoop()
 
 void *broadcast()
 {
+	//TODO: we can save memory by allocating nodeActive here:
 	pthread_t send_thread[nodeCount];
 	send_thread_data * sd;
 	int local_clock, i;
@@ -131,6 +132,9 @@ void *broadcast()
 
 	for(i=0 ; i<nodeCount ; i++)
 	{
+		//OMMIT SENDING TO DISABLED NODES
+		if( node[i].active == 0 ) continue;
+		
 		/* Alokuj strukturę send_thread_data - thread ją potem zwalnia */
 		sd = (send_thread_data*)malloc(sizeof(send_thread_data));
 		sd->node_id = i;
@@ -143,14 +147,17 @@ void *broadcast()
 		{
 			fprintf(stderr, "[%d]Error starting %d client thread\n", get_clock(), i);
 			free(sd);
-			//terminate();
 		}
 	}
 
-	//Wait for all threads to finish
+	/*Wait for all threads to finish
 	for(i=0; i<nodeCount; i++)
+	{
+		//OMMIT SENDING TO DISABLED NODES
+		if( node[i].active == 0 ) continue;
 		pthread_join(send_thread[i], NULL);
-
+	}*/
+	
 	critial_section();
 
 	free(json);
