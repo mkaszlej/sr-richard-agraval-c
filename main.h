@@ -42,9 +42,10 @@ int parseConfigLine(char *);
 
 //critical section
 void * critial_section();
-void * await_critical_section();
+int await_critical_section();
 void * enter_critical_section();
 void * leave_critical_section();
+void * raise_error(int type, int param);
 
 //waiting flag
 void set_waiting(int value);

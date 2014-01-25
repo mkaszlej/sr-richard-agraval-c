@@ -13,15 +13,21 @@ extern sem_t waiting_mutex;
 extern sem_t counter_waiting_mutex;		
 extern int waiting;
 extern int queue_counter;
+extern int global_error_flag;
 
 void * critial_section()
 {
-	await_critical_section();
+	if( !await_critical_section() )
+	{
+		fprintf(stderr,"[%d] *** ERROR WHILE WAITING FOR CRITICAL SECTION\n", get_clock() );
+		global_error_flag = 0;
+		return;
+	}
 	enter_critical_section();
 	leave_critical_section();
 }
 
-void * await_critical_section()
+int await_critical_section()
 {
 	int i,access=0;
 	printf("[%d] *** AWAITING CRITIAL SECTION: *** \n", get_clock());
@@ -31,8 +37,11 @@ void * await_critical_section()
 		for(i = 0 ; i < nodeCount ; i++ )
 			if( is_node_ok(i) == 0 ) access = 0;
 	
+		if(global_error_flag) return 0;
+	
 		sleep(0.1);
 	}
+	return 1;
 }
 
 void * enter_critical_section()
@@ -128,5 +137,13 @@ int get_waiting_queue_counter()
 	sem_post (&counter_waiting_mutex);	
 	return ret;
 }	
+
+void * raise_error(int type, int param)
+{
+	fprintf(stderr, "[%d] ERROR %d-%d\n", get_clock(), type, param);
+	global_error_flag = 1;
+	
+	set_stop_waiting();
+}
 
 

@@ -150,14 +150,6 @@ void *broadcast()
 			free(sd);
 		}
 	}
-
-	/*Wait for all threads to finish
-	for(i=0; i<nodeCount; i++)
-	{
-		//OMMIT SENDING TO DISABLED NODES
-		if( node[i].active == 0 ) continue;
-		pthread_join(send_thread[i], NULL);
-	}*/
 	
 	critial_section();
 

@@ -36,6 +36,8 @@ int waiting;
 
 int queue_counter = 0;
 
+int global_error_flag = 0;
+
 //global waiting start time
 int waiting_clock;
 

@@ -46,6 +46,7 @@ void *send_response(int sock)
 
 	/* sending message increments clock */
 	increment_clock();
+	
 	/* send ok */
 	n = write(sock, response, 30);
 	if (n < 0) 
