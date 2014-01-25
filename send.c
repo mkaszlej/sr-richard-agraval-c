@@ -116,8 +116,9 @@ void await_response(int sockfd, send_thread_data * data)
 	bzero(buffer,256);
 
 	//START TIMEOOUT CLOCK
-	clock_t t_start, t2;
-	t_start = clock();
+	time_t t_start, t_end;
+	double t2;
+	time(&t_start);
 	int timeout = nodeActive*MAX_CRITICAL_TIME;
 	settimeout(sockfd, timeout);
 
@@ -127,13 +128,14 @@ void await_response(int sockfd, send_thread_data * data)
 	/* read call was blocking for timeout*/
 	
 	/* how long did we wait */
-	t2 = clock()-t_start;
-	printf("[%d]SM[%d] IT TOOK NODE %s:%d - %f SECONDS TO ANSWER\n", get_clock(), waiting_clock, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
+	time(&t_end);
+	t2 = difftime(t_end, t_start);
+	printf("[%d]SM[%d] IT TOOK NODE %s:%d - %g SECONDS TO ANSWER\n", get_clock(), waiting_clock, data->ip, data->port, t2 );
 	
 	/* Error may indicate closed socket etc. - node should be deleted */
 	if (n <= 0) 
 	{
-		fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: TIMEOUT OR ERROR-%d reading from for ip: %s:%d AFTER: %f s\n", get_clock(), waiting_clock, n, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
+		fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: TIMEOUT OR ERROR-%d reading from for ip: %s:%d AFTER: %g s\n", get_clock(), waiting_clock, n, data->ip, data->port, t2 );
 		raise_error(1, data->node_id);
 		return NULL;
 	}
