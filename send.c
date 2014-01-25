@@ -128,7 +128,7 @@ void await_response(int sockfd, send_thread_data * data)
 	
 	/* how long did we wait */
 	t2 = clock()-t_start;
-	printf("[%d]SM[%d] IT TOOK NODE %s:%d - %g SECONDS TO ANSWER\n", get_clock(), waiting_clock, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
+	printf("[%d]SM[%d] IT TOOK NODE %s:%d - %f SECONDS TO ANSWER\n", get_clock(), waiting_clock, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
 	
 	/* Error may indicate closed socket etc. - node should be deleted */
 	if (n <= 0) 

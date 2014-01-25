@@ -30,6 +30,7 @@ sem_t mutex;
 sem_t node_mutex;
 sem_t waiting_mutex;
 sem_t counter_waiting_mutex;
+sem_t error_mutex;
 
 //global waiting flag
 int waiting;

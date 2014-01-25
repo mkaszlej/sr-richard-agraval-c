@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
 	sem_init(&node_mutex, 0, 1);
 	sem_init(&waiting_mutex, 0, 1);
 	sem_init(&counter_waiting_mutex, 0, 1);
+	sem_init(&error_mutex, 0, 1);
 
 	/* Ustaw flagi */
 	set_stop_waiting();
@@ -115,13 +116,17 @@ void *broadcast()
 	//TODO: we can save memory by allocating nodeActive here:
 	pthread_t send_thread[nodeCount];
 	send_thread_data * sd;
-	int local_clock, i;
+	int local_clock, i, rc;
 	char * json;
 	
 	printf("\n[%d] USER ISSUED CRITICAL SECTION REQUEST\n", get_clock());
 	
 	/* Reset all node ok */
-	for(i=0; i<nodeCount; i++) reset_node_ok(i);
+	for(i=0; i<nodeCount; i++)
+	{
+		send_thread[i] = NULL;
+        reset_node_ok(i);
+	}
 	
 	/* Ustaw flagę oczekiwania */
 	set_start_waiting();
@@ -146,17 +151,30 @@ void *broadcast()
 		sd->port = node[i].port;
 		sd->ok = 0;
 		
-		if(pthread_create( & send_thread[i], NULL, send_message, sd))
+		if(pthread_create( & send_thread[i],  NULL, send_message, sd))
 		{ 
 			fprintf(stderr, "[%d] Error starting %d client thread\n", get_clock(), i);
 			free(sd);
 		}
 	}
-	free(json);
-	
-	
-	if( critial_section() == -1 ) broadcast();
 
+	/* Wait for threads to join */
+	for(i=0; i<nodeCount ; i++)
+	{
+		if(send_thread[i] != NULL)
+		{
+			void * status;
+			rc = pthread_join( send_thread[i], &status);
+		}
+	}
+	
+	if( critial_section() == -1 )
+	{
+		free(json);
+		broadcast();
+	}
+	else
+		free(json);
 
 }
 

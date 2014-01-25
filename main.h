@@ -15,7 +15,6 @@ typedef struct {
 	int port;
 	char ok;
 	char active;
-	sem_t node_mutex;
 } nodeAddress;
 
 //Glowna petla programu

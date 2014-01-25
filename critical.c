@@ -10,6 +10,7 @@ extern nodeAddress node[];
 extern int nodeCount;
 extern int nodeActive;
 extern sem_t waiting_mutex;		
+extern sem_t error_mutex;		
 extern sem_t counter_waiting_mutex;		
 extern int waiting;
 extern int queue_counter;
@@ -142,17 +143,21 @@ int get_waiting_queue_counter()
 
 void * raise_error(int type, int param)
 {
+
+	sem_wait (&error_mutex);
+	
 	fprintf(stderr, "[%d] *** HANDLING ERROR %d-%d: \n", get_clock(), type, param);
 	
-	increment_clock();
-	
 	fprintf(stderr, "[%d] *** INCREMENTING CLOCK \n", get_clock() );
-		
+	
 	global_error_flag = 1;
 	
 	if( type == 1 ) remove_node(param);
 	
+	sem_post (&error_mutex);
+	
 	set_stop_waiting();
+	
 }
 
 
