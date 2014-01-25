@@ -79,9 +79,6 @@ void *receiveMessage(void *fd_void_ptr)
 
 	n = read(sock,buffer,255);	//odczytaj z bufora
 	
-	printf("\ntest\n");	
-		fflush(stdout);
-	
 	if (n < 0)
 	{
 		fprintf(stderr, "[%d]RM[%d]: ERROR reading from socket - exiting\n", get_clock(), sock);
