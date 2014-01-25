@@ -71,12 +71,17 @@ void set_start_waiting()
 		sem_wait (&waiting_mutex);
 			if(waiting == 1)
 			{
+				printf("[%d] *** CURRENTLY WAITING! WQ: %d\n", get_clock(), queue_counter );
 				ret = 1;
 			}
 			else if( get_waiting_queue_counter() == 0 ){
+				 printf("[%d] *** START CRITIAL SECTION REQUEST. WQ CLEAN: %d\n", get_clock(), queue_counter );
 				 waiting = 1;
 				 ret = 1;
 			}
+			else
+				printf("[%d] *** CANT ISSUE REQUEST, THREADS IN WQ: %d\n", get_clock(), queue_counter );
+
 		sem_post (&waiting_mutex);
 		sleep(0.3);
 	}
@@ -86,6 +91,7 @@ void set_stop_waiting()
 {
 	sem_wait (&waiting_mutex);
 		waiting = 0;
+		printf("[%d] *** FINALIZED CRITICAL SECTION REQUEST. WAITING COUNT: %d\n", get_clock(), queue_counter );
 	sem_post (&waiting_mutex);
 }
 
