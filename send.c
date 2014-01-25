@@ -4,16 +4,19 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <fcntl.h>
 #include <time.h>
 #include "main.h"
 #include "communication.h"
+#include <errno.h>
 
-#define T2_MAX 2
+#define MAX_CRITICAL_TIME 11
 
 extern nodeAddress node[];
 extern int nodeCount;
 extern int global_port;
 extern int waiting_clock;
+extern int nodeActive;
 
 void * send_message(void * send_thread_data_ptr)
 {
@@ -88,6 +91,17 @@ void * send_message(void * send_thread_data_ptr)
     return NULL;
 }
 
+void settimeout(int sock, int timeout) {
+	
+	struct timeval tv;
+
+	tv.tv_sec = timeout;  /* 30 Secs Timeout */	
+	tv.tv_usec = 0;  // Not init'ing this can cause strange errors
+
+	setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,sizeof(struct timeval));;
+	
+}
+
 void await_response(int sockfd, send_thread_data * data)
 {
 	int type, clock_val, n;
@@ -99,77 +113,66 @@ void await_response(int sockfd, send_thread_data * data)
 	//START TIMEOOUT CLOCK
 	clock_t t_start, t2;
 	t_start = clock();
+	int timeout = nodeActive*MAX_CRITICAL_TIME;
+	settimeout(sockfd, timeout);
 
-	/* do until we or someone else set node ok to 1 */
-	while( !is_node_ok(data->node_id) )
+	/* Now read server response */
+	n = read(sockfd,buffer,255);
+	
+	/* read call was blocking for timeout*/
+	
+	/* how long did we wait */
+	t2 = clock()-t_start;
+	printf("[%d]SM[%d] IT TOOK NODE %s:%d - %g SECONDS TO ANSWER\n", get_clock(), waiting_clock, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
+	
+	/* Error may indicate closed socket etc. - node should be deleted */
+	if (n <= 0) 
 	{
-		
-		/* Now read server response */
-		n = read(sockfd,buffer,255);
-	
-		/* read call was blocking */
-		/* now check timer ?? */
-		t2 = clock()-t_start;
-		if(T2_MAX < ((float)t2)/CLOCKS_PER_SEC)
-			fprintf(stderr,"[%d]SM[%d]TOO LONG WAITING: %g FOR ANSWER FROM ID: %d, SHOULD REMOVE THIS NODE\n", get_clock(), waiting_clock, ((float)t2)/CLOCKS_PER_SEC, data->node_id);
-	
-
-		/* Error may indicate closed socket etc. - we ignore it */
-		if (n < 0) 
-		{
-			fprintf(stderr,"[%d]SM[%d]AWAIT RESPONSE: ERROR reading from for ip: %s:%d\n", get_clock(), 	waiting_clock, data->ip, data->port);
-			sleep(0.3);
-			continue;
-			//return NULL;
-		}
-		
-		//nothing to read...
-		if(n==0){sleep(0.3); continue;}
-
-		// Token will point to end of json.
-		token = strtok(buffer, "}");
-				
-		//If null continue to next iteration
-		//if(token == NULL){ sleep(0.3); continue; }
-		//We ommit opening {
-		token++;
-
-		//Allocate buffer for answer
-		char *json = (char *)malloc( n+1 );
-		strcpy(json,token);
-		
-		//get type
-		token = strtok(json,",:");
-		token = strtok(NULL,",:");
-		if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
-		else type = 0;
-		if(type != 1){ 
-			//we received something else - not ok!
-			fprintf(stderr,"[%d]SM[%d]AWAIT RESPONSE: ERROR not OK received from ip: %s:%d\ntoken: %s type: %d\n", get_clock(), waiting_clock, data->ip, data->port, token, type);
-			sleep(0.3);
-			continue;
-		}
-
-		//get clock
-		token = strtok(NULL, ",:");
-		token = strtok(NULL, ",:");
-		clock_val = atoi(token);
-		
-		//update clock with received value
-		update_clock(clock_val);
-		
-		printf("[%d]SM[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), waiting_clock, sockfd, type, clock_val);
-		
-		//we get ok so set node to ok
-		set_node_ok(data->node_id);
-		
-		//free json that is parsed and no longer need
-		free(json);
-		fflush(stdout);
-		
-		break;
-
+		fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: TIMEOUTED-%d reading from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);
+		return NULL;
 	}
+
+	/* --- HERE BELOW WE ASSUME THERE IS NO SOCKET ERROR --- */ 
+
+	// Token will point to end of json.
+	token = strtok(buffer, "}");
+	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	
+	//We ommit opening {
+	token++;
+
+	//Allocate buffer for answer
+	char *json = (char *)malloc( n+1 );
+	strcpy(json,token);
+		
+	//get type
+	token = strtok(json,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	token = strtok(NULL,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	
+	if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
+	else type = 0;
+	if(type != 1){ 
+		//we received something else - not ok!
+		fprintf(stderr,"[%d]SM[%d]AWAIT RESPONSE: ERROR not OK received from ip: %s:%d\ntoken: %s type: %d\n", get_clock(), waiting_clock, data->ip, data->port, token, type);
+		return NULL;
+	}
+
+	//get clock
+	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	clock_val = atoi(token);
+	
+	//update clock with received value
+	update_clock(clock_val);
+	
+	printf("[%d]SM[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), waiting_clock, sockfd, type, clock_val);
+		
+	//we get ok so set node to ok
+	set_node_ok(data->node_id);
+		
+	//free json that is parsed and no longer need
+	free(json);
+	fflush(stdout);
 	
 	return;
 	
