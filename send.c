@@ -103,12 +103,16 @@ void await_response(int sockfd, send_thread_data * data)
 	/* do until we or someone else set node ok to 1 */
 	while( !is_node_ok(data->node_id) )
 	{
-		t2 = clock()-t_start;
-		if(T2_MAX < ((float)t2)/CLOCKS_PER_SEC)
-			fprintf(stderr,"[%d]SM[%d]TOO LONG WAITING FOR ANSWER FROM ID: %d, SHOULD REMOVE THIS NODE\n", get_clock(), 	waiting_clock, data->node_id);
-	
+		
 		/* Now read server response */
 		n = read(sockfd,buffer,255);
+	
+		/* read call was blocking */
+		/* now check timer ?? */
+		t2 = clock()-t_start;
+		if(T2_MAX < ((float)t2)/CLOCKS_PER_SEC)
+			fprintf(stderr,"[%d]SM[%d]TOO LONG WAITING: %g FOR ANSWER FROM ID: %d, SHOULD REMOVE THIS NODE\n", get_clock(), waiting_clock, ((float)t2)/CLOCKS_PER_SEC, data->node_id);
+	
 
 		/* Error may indicate closed socket etc. - we ignore it */
 		if (n < 0) 
