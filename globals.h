@@ -28,9 +28,12 @@ int  config_last_modified;
 sem_t mutex;
 sem_t node_mutex;
 sem_t waiting_mutex;
+sem_t counter_waiting_mutex;
 
 //global waiting flag
 int waiting;
+
+int queue_counter = 0;
 
 //global waiting start time
 int waiting_clock;

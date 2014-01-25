@@ -21,14 +21,14 @@ void *add_to_waiting_queue(int sock, long ip)
 		return;
 	}
 	
-	//sprawdz czy nie jest juz w kolejce oczekujacych
+	increment_waiting_queue();
 	 
 	while( get_waiting() == 1 )
 	{
 		sleep(0.1);
 	}
 	
-	
+	decrement_waiting_queue();
 	
 	printf("[%d]RM[%d] RELEASING FROM WAITING QUEUE -> IP: %d\n", get_clock(), sock, ip );
 
@@ -112,13 +112,13 @@ void *receiveMessage(void *fd_void_ptr)
 	if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
 	else type = 0;
 
-	printf("type: %d\n", type);
+	//printf("type: %d\n", type);
 
 	token = strtok(NULL, ",:");
 	token = strtok(NULL, ",:");
 	
 	clock = atoi(token);
-	printf("clock: %d\n", clock);
+	//printf("clock: %d\n", clock);
 
 	/*Zwieksz zegar*/
 	update_clock(clock);

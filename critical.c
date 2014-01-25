@@ -10,7 +10,9 @@ extern nodeAddress node[];
 extern int nodeCount;
 extern int nodeActive;
 extern sem_t waiting_mutex;		
+extern sem_t counter_waiting_mutex;		
 extern int waiting;
+extern int queue_counter;
 
 void * critial_section()
 {
@@ -51,7 +53,7 @@ void * leave_critical_section()
 	/* incerement clock! */
 	increment_clock();
 	/* reset flag */
-	set_waiting(0);
+	set_stop_waiting();
 	/* reset all nodes */
 	for(i; i<nodeCount; i++)
 	{
@@ -61,10 +63,29 @@ void * leave_critical_section()
 	printf("[%d] *** LEFT CRITICAL_SECTION *** \n", get_clock() );
 }
 
-void set_waiting(int value)
+void set_start_waiting()
+{
+	int ret=0;
+	while(ret == 0)
+	{
+		sem_wait (&waiting_mutex);
+			if(waiting == 1)
+			{
+				ret = 1;
+			}
+			else if( get_waiting_queue_counter() == 0 ){
+				 waiting = 1;
+				 ret = 1;
+			}
+		sem_post (&waiting_mutex);
+		sleep(0.3);
+	}
+}
+
+void set_stop_waiting()
 {
 	sem_wait (&waiting_mutex);
-		waiting = value;
+		waiting = 0;
 	sem_post (&waiting_mutex);
 }
 
@@ -76,3 +97,30 @@ int get_waiting()
 	sem_post (&waiting_mutex);	
 	return ret;
 }
+
+void increment_waiting_queue()
+{
+	sem_wait (&counter_waiting_mutex);
+		queue_counter++;
+		printf("[%d] *** ADDING TO WAITING QUEUE. COUNT: \n", get_clock(), queue_counter );
+	sem_post (&counter_waiting_mutex);	
+}
+
+void decrement_waiting_queue()
+{
+	sem_wait (&counter_waiting_mutex);
+		queue_counter--;
+		printf("[%d] *** REMOVING WAITING QUEUE. COUNT: \n", get_clock(), queue_counter );
+	sem_post (&counter_waiting_mutex);	
+}
+
+int get_waiting_queue_counter()
+{
+	int ret;
+	sem_wait (&counter_waiting_mutex);
+		ret = queue_counter;
+	sem_post (&counter_waiting_mutex);	
+	return ret;
+}	
+
+

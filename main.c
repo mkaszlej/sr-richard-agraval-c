@@ -18,9 +18,10 @@ int main(int argc, char* argv[])
 	sem_init(&mutex, 0, 1);
 	sem_init(&node_mutex, 0, 1);
 	sem_init(&waiting_mutex, 0, 1);
+	sem_init(&counter_waiting_mutex, 0, 1);
 
 	/* Ustaw flagi */
-	set_waiting(0);
+	set_stop_waiting();
 
 	/* Odczyt wejscia */
 	while ((option = getopt (argc, argv, "l:c:p:f:")) != -1)
@@ -121,7 +122,7 @@ void *broadcast()
 	for(i=0; i<nodeCount; i++) reset_node_ok(i);
 	
 	/* Ustaw flagę oczekiwania */
-	set_waiting(1);
+	set_start_waiting();
 	
 	/* Pobierz czas zgłoszenia */
 	waiting_clock = get_clock();
