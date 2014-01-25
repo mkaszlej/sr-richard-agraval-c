@@ -102,7 +102,7 @@ void increment_waiting_queue()
 {
 	sem_wait (&counter_waiting_mutex);
 		queue_counter++;
-		printf("[%d] *** ADDING TO WAITING QUEUE. COUNT: \n", get_clock(), queue_counter );
+		printf("[%d] *** ADDING TO WAITING QUEUE. COUNT: %d\n", get_clock(), queue_counter );
 	sem_post (&counter_waiting_mutex);	
 }
 
@@ -110,7 +110,7 @@ void decrement_waiting_queue()
 {
 	sem_wait (&counter_waiting_mutex);
 		queue_counter--;
-		printf("[%d] *** REMOVING WAITING QUEUE. COUNT: \n", get_clock(), queue_counter );
+		printf("[%d] *** REMOVING WAITING QUEUE. COUNT: %d\n", get_clock(), queue_counter );
 	sem_post (&counter_waiting_mutex);	
 }
 
