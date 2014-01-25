@@ -41,7 +41,7 @@ int parseConfig( FILE * );
 int parseConfigLine(char *);
 
 //critical section
-void * critial_section();
+int critial_section();
 int await_critical_section();
 void * enter_critical_section();
 void * leave_critical_section();

@@ -118,6 +118,8 @@ void *broadcast()
 	int local_clock, i;
 	char * json;
 	
+	printf("\n[%d] USER ISSUED CRITICAL SECTION REQUEST\n", get_clock());
+	
 	/* Reset all node ok */
 	for(i=0; i<nodeCount; i++) reset_node_ok(i);
 	
@@ -145,15 +147,17 @@ void *broadcast()
 		sd->ok = 0;
 		
 		if(pthread_create( & send_thread[i], NULL, send_message, sd))
-		{
-			fprintf(stderr, "[%d]Error starting %d client thread\n", get_clock(), i);
+		{ 
+			fprintf(stderr, "[%d] Error starting %d client thread\n", get_clock(), i);
 			free(sd);
 		}
 	}
-	
-	critial_section();
-
 	free(json);
+	
+	
+	if( critial_section() == -1 ) broadcast();
+
+
 }
 
 

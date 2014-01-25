@@ -15,16 +15,18 @@ extern int waiting;
 extern int queue_counter;
 extern int global_error_flag;
 
-void * critial_section()
+int critial_section()
 {
 	if( !await_critical_section() )
 	{
 		fprintf(stderr,"[%d] *** ERROR WHILE WAITING FOR CRITICAL SECTION\n", get_clock() );
 		global_error_flag = 0;
-		return;
+		return -1;
 	}
 	enter_critical_section();
 	leave_critical_section();
+	
+	return 0;
 }
 
 int await_critical_section()
@@ -140,8 +142,15 @@ int get_waiting_queue_counter()
 
 void * raise_error(int type, int param)
 {
-	fprintf(stderr, "[%d] ERROR %d-%d\n", get_clock(), type, param);
+	fprintf(stderr, "[%d] *** HANDLING ERROR %d-%d: \n", get_clock(), type, param);
+	
+	increment_clock();
+	
+	fprintf(stderr, "[%d] *** INCREMENTING CLOCK \n", get_clock() );
+		
 	global_error_flag = 1;
+	
+	if( type == 1 ) remove_node(param);
 	
 	set_stop_waiting();
 }

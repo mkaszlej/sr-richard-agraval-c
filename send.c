@@ -51,7 +51,7 @@ void * send_message(void * send_thread_data_ptr)
 	if (sockfd < 0) 
 	{
 		fprintf(stderr, "[%d]SM[%d] ERROR opening socket for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
-		raise_error(0, data->node_id);
+		raise_error(1, data->node_id);
 		return NULL;
 	}
 
@@ -59,7 +59,7 @@ void * send_message(void * send_thread_data_ptr)
 	server = gethostbyname(data->ip);
 	if (server == NULL) {
 		fprintf(stderr, "[%d]SM[%d] ERROR no such host - ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
-		raise_error(0, data->node_id);
+		raise_error(1, data->node_id);
 		return NULL;
 	}
 
@@ -72,7 +72,7 @@ void * send_message(void * send_thread_data_ptr)
 	if (connect(sockfd,&serv_addr,sizeof(serv_addr)) < 0) 
 	{
 		fprintf(stderr, "[%d]SM[%d] ERROR connecting for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
-		raise_error(0, data->node_id);
+		raise_error(1, data->node_id);
 		return NULL;
 	}	
 
@@ -81,7 +81,7 @@ void * send_message(void * send_thread_data_ptr)
 	if (n < 0) 
 	{
 		fprintf(stderr,"[%d]SM[%d] ERROR writing to socket for ip: %s:%d\n", get_clock(), waiting_clock, data->ip, data->port);
-		raise_error(0, data->node_id);
+		raise_error(1, data->node_id);
 		return NULL;
 	}
 	else
@@ -134,7 +134,7 @@ void await_response(int sockfd, send_thread_data * data)
 	if (n <= 0) 
 	{
 		fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: TIMEOUT OR ERROR-%d reading from for ip: %s:%d AFTER: %f s\n", get_clock(), waiting_clock, n, data->ip, data->port, ((float)t2)/CLOCKS_PER_SEC);
-		raise_error(0, data->node_id);
+		raise_error(1, data->node_id);
 		return NULL;
 	}
 
@@ -152,20 +152,21 @@ void await_response(int sockfd, send_thread_data * data)
 	strcpy(json,token);
 		
 	//get type
-	token = strtok(json,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
-	token = strtok(NULL,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	token = strtok(json,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port); raise_error(0, data->node_id); return NULL;}
+	token = strtok(NULL,",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port); raise_error(0, data->node_id); return NULL;}
 	
 	if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
 	else type = 0;
 	if(type != 1){ 
 		//we received something else - not ok!
 		fprintf(stderr,"[%d]SM[%d]AWAIT RESPONSE: ERROR not OK received from ip: %s:%d\ntoken: %s type: %d\n", get_clock(), waiting_clock, data->ip, data->port, token, type);
+		raise_error(0, data->node_id);
 		return NULL;
 	}
 
 	//get clock
-	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
-	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port);return NULL;}
+	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port); raise_error(0, data->node_id); return NULL;}
+	token = strtok(NULL, ",:");	if(token == NULL){fprintf(stderr,"[%d]SM[%d] AWAIT RESPONSE: ERROR-%d parsing from for ip: %s:%d\n", get_clock(), waiting_clock, n, data->ip, data->port); raise_error(0, data->node_id); return NULL;}
 	clock_val = atoi(token);
 	
 	//update clock with received value

@@ -36,6 +36,7 @@ void add_node( char *name, char *ip, int port)
 
 void remove_node( int node_id )
 {
+	printf("[%d] *** DISABLING NODE[%d]: %s:%d\n", get_clock(), node_id, node[node_id].ip_name, node[node_id].port);
 	//disable it
 	node[node_id].active = 0;
 	//keep it ok to break all current processes
@@ -43,7 +44,7 @@ void remove_node( int node_id )
 	//decrement active node count 
 	nodeActive--;
 	
-	//TODO: set_waiting...? flag_resend?
+	//TODO: flag_resend?
 	
 	return;
 }
