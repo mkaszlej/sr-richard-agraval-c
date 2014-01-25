@@ -4,8 +4,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <time.h>
 #include "main.h"
 #include "communication.h"
+
+#define T2_MAX 2
 
 extern nodeAddress node[];
 extern int nodeCount;
@@ -87,16 +90,22 @@ void * send_message(void * send_thread_data_ptr)
 
 void await_response(int sockfd, send_thread_data * data)
 {
-	int type, clock, n;
+	int type, clock_val, n;
 	/* allocate buffer */
     char buffer[256];
     char * token;
 	bzero(buffer,256);
 
+	//START TIMEOOUT CLOCK
+	clock_t t_start, t2;
+	t_start = clock();
+
 	/* do until we or someone else set node ok to 1 */
 	while( !is_node_ok(data->node_id) )
 	{
-
+		t2 = clock()-t_start;
+		if(T2_MAX < ((float)t2)/CLOCKS_PER_SEC)
+			fprintf(stderr,"[%d]SM[%d]TOO LONG WAITING FOR ANSWER FROM ID: %d, SHOULD REMOVE THIS NODE\n", get_clock(), 	waiting_clock, data->node_id);
 	
 		/* Now read server response */
 		n = read(sockfd,buffer,255);
@@ -140,12 +149,12 @@ void await_response(int sockfd, send_thread_data * data)
 		//get clock
 		token = strtok(NULL, ",:");
 		token = strtok(NULL, ",:");
-		clock = atoi(token);
+		clock_val = atoi(token);
 		
 		//update clock with received value
-		update_clock(clock);
+		update_clock(clock_val);
 		
-		printf("[%d]SM[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), waiting_clock, sockfd, type, clock);
+		printf("[%d]SM[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), waiting_clock, sockfd, type, clock_val);
 		
 		//we get ok so set node to ok
 		set_node_ok(data->node_id);

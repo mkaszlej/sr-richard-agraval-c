@@ -3,6 +3,7 @@
 
 #include <semaphore.h>
 
+
 //Tablica z adresami wezlow:
 nodeAddress node[MAX_NODES];
 
