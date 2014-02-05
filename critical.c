@@ -50,6 +50,10 @@ int await_critical_section()
 void * enter_critical_section()
 {
 	int i;
+
+	/* incerement clock! TODO dlaczego? */
+	increment_clock();
+	
 	printf("*******************************\n[%d] CRITICAL_SECTION", get_clock() );
 	for(i=0; i<10; i++){
 		sleep(1);

@@ -43,4 +43,7 @@ typedef struct{
 	long ip;
 	char * ip_name;
 } receive_thread_data;
+
+void testJson(char *);
+int do_parse_json(char *);
 #endif

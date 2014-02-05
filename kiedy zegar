@@ -1,19 +1,21 @@
-zegar przy odbieraniu
-wejscie 
-wyjscie
+1. Przepisać serwer
+	- inkrementuj zegar przy odbieraniu
+	- obłsuga wiadomości ok
+	- parser json
+	- odpowiedź na oddzielnym wątku
+	- uwaga na puste wiadomosci
+
+	
+2. Dobrze wypisać IP
+	- napisać metode print IP
+
 
 dodawanie jak się zgłoszą
 
 odpowiedź na oddzielnym
 
-parsowanie jsona
-
 oodzielnie timeout obsługiwać
-
-Dobrze wypisać IP
 
 jedno todo
 
-nie odpowiadać na ten sam socket
 
-uwaga na puste wiadomosci

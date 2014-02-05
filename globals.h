@@ -44,5 +44,8 @@ int waiting_clock;
 
 long local_address = -1;
 
+const int TYPE_OK=101;
+const int TYPE_ORDER=102;
+const int PARSE_ERROR=100;
 
 #endif

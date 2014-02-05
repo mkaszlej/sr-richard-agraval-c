@@ -6,9 +6,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include "communication.h"
-
-
-
+#include "jsmn.h"
 
 extern int global_port;
 extern int waiting_clock;
@@ -62,6 +60,43 @@ void *send_response(int sock)
 	close(sock);
 }
 
+void testJson(char * buffer)
+{
+
+	int r;
+	jsmn_parser p;
+	jsmntok_t tok[10];
+	const char *js;
+
+	printf("TESTING JSON: %s", buffer);
+
+	js = "\"strVar\" : \"hello world\"";
+	jsmn_init(&p);
+	r = jsmn_parse(&p, js, tok, 10);
+	check(r == JSMN_SUCCESS && tok[0].type == JSMN_STRING 
+			&& tok[1].type == JSMN_STRING);
+	check(TOKEN_STRING(js, tok[0], "strVar"));
+	check(TOKEN_STRING(js, tok[1], "hello world"));
+
+	js = "\"strVar\" : \"escapes: \\/\\r\\n\\t\\b\\f\\\"\\\\\"";
+	jsmn_init(&p);
+	r = jsmn_parse(&p, js, tok, 10);
+	check(r == JSMN_SUCCESS && tok[0].type == JSMN_STRING 
+			&& tok[1].type == JSMN_STRING);
+	check(TOKEN_STRING(js, tok[0], "strVar"));
+	check(TOKEN_STRING(js, tok[1], "escapes: \\/\\r\\n\\t\\b\\f\\\"\\\\"));
+
+	js = "\"strVar\" : \"\"";
+	jsmn_init(&p);
+	r = jsmn_parse(&p, js, tok, 10);
+	check(r == JSMN_SUCCESS && tok[0].type == JSMN_STRING 
+			&& tok[1].type == JSMN_STRING);
+	check(TOKEN_STRING(js, tok[0], "strVar"));
+	check(TOKEN_STRING(js, tok[1], ""));
+
+	return 0;
+
+}
 
 
 void *receiveMessage(void *fd_void_ptr)
@@ -96,13 +131,10 @@ void *receiveMessage(void *fd_void_ptr)
 		return NULL;
 	}
 
-	//printf("BUFFER:%s|\n",buffer);
+	printf("BUFFER:%s|\n",buffer);
 	
-		
-	//testJson(buffer);
-	printf("%%% [%d] PARSING: %s \n", get_clock(), buffer);
-	int parser_response = do_parse_json(buffer) ;
-	printf("%%% [%d] MESSAGE: %d\n", get_clock(), parser_response );
+	testJson(buffer);
+	
 	
 	//TODO check buffor size!
 		
@@ -132,7 +164,7 @@ void *receiveMessage(void *fd_void_ptr)
 	//printf("clock: %d\n", clock);
 
 	/*Zwieksz zegar*/
-	//update_clock(clock);
+	update_clock(clock);
 	
 	/*Message is parsed we can free json*/
 	free(json);
@@ -203,76 +235,4 @@ void *receiveMessage(void *fd_void_ptr)
     printf("[%d]RM[%d] FINISHED ITS DUTY\n", get_clock(), sock);
 
     return NULL;
-}
-
-void *listenMessages(void *x_void_ptr)
-{
-
-    int sockfd, newsockfd, clilen;
-    char buffer[256];
-    struct sockaddr_in serv_addr, cli_addr;
-    int  n;
-
-    /* First call to socket() function */
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0) 
-    {
-		fprintf( stderr, "[%d]RM _STARTING SERVER SOCKET_ ERROR opening socket\n", get_clock() );
-        exit(1);
-    }
-    /* Initialize socket structure */
-    bzero((char *) &serv_addr, sizeof(serv_addr));
-    //portno = 5001;
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    serv_addr.sin_port = htons(global_port);	//port defined in main.h
- 
-    /* Now bind the host address using bind() call.*/
-    if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-    {
-		fprintf( stderr, "[%d]RM _STARTING SERVER SOCKET_ ERROR on binding\n", get_clock() );
-         exit(1);
-    }
-    
-    /* Now start listening for the clients, here 
-     * process will go in sleep mode and will wait 
-     * for the incoming connection
-     */
-    listen(sockfd,5);
-    clilen = sizeof(cli_addr);
-    while (1) 
-    {
-
-        newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-	
-		printf("[%d]RM[%d] Connection started port: %d \n", get_clock(), newsockfd, global_port);
-
-        if (newsockfd < 0)
-        {
-            fprintf( stderr, "[%d]RM[%d] ERROR on accept\n", get_clock , newsockfd );
-            exit(1);
-        }
-
-		/* this variable is our reference to the second thread */
-		pthread_t process_thread;
-
-		/* create a receive data struct to sent to thread. Thread frees this data */
-		receive_thread_data * rd = malloc(sizeof(receive_thread_data));
-		rd->sockfd = newsockfd;
-		rd->ip = cli_addr.sin_addr.s_addr;
-		rd->port = ntohs(cli_addr.sin_port);
-			
-		//printf("[%d]RM[%d] rd->ip:%d port:%d;rd->port: %d\n",  get_clock(), newsockfd, rd->ip, rd->port, ntohs(cli_addr.sin_port) );
-		
-		/* create a second thread which executes inc_x(&x) */
-		if(pthread_create(& process_thread, NULL, receiveMessage, rd)) {
-			fprintf(stderr, "[%d]RM[%d] Error creating thread\n", get_clock(), newsockfd );
-			exit(1);
-		}
-		//pthread_detach(process_thread);
-
-    } /* end of while */
-
-    return NULL;
-
 }

@@ -40,8 +40,8 @@ void * send_message(void * send_thread_data_ptr)
 		printf("[%d]SM[%d] message: %s \n", get_clock(), waiting_clock, json);
 
 	/* copy message to buffer */
-    char buffer[30];
-    bzero(buffer,30);
+    char buffer[100];
+    bzero(buffer,100);
     strcpy(buffer,json);
     
     /* send a message to node */
@@ -172,7 +172,7 @@ void await_response(int sockfd, send_thread_data * data)
 	clock_val = atoi(token);
 	
 	//update clock with received value
-	update_clock(clock_val);
+	//update_clock(clock_val);
 	
 	printf("[%d]SM[%d] SERVER RESPONDED [%d] type: %d, clock: %d\n", get_clock(), waiting_clock, sockfd, type, clock_val);
 		
