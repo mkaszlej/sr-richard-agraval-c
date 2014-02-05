@@ -79,6 +79,8 @@ void *receiveMessage2(void *fd_void_ptr)
     char buffer[256];
 	bzero(buffer,256);		//zeruj buffer
 
+	fprintf(stdout, "[%d]RM[%d]: reading from socket...\n", get_clock(), sock);
+
 	n = read(sock,buffer,255);	//odczytaj z bufora
 
 	//TODO obsluga bledow
