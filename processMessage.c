@@ -101,7 +101,7 @@ void *receiveMessage2(void *fd_void_ptr)
 		case OK:
 
 			/* This should never happen */
-			if(get_waiting() == 1)
+			if(get_waiting() == 0)
 			{
 				fprintf(stderr, "[%d]RM[%d]: ERROR received ok while not waiting\n", get_clock(), sock);
 				close(sock);
