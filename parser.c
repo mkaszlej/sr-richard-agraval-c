@@ -37,6 +37,8 @@ int do_parse_json(char * buffer)
 			if( token_string(buffer, token[i], "clock") ) clock_flag = i+1;
 	}
 
+	fprintf(stderr,"### type_flag: %d, clock_flag: %d\n", type_flag, clock_flag);
+
 	//NIE ZNALEZIONO! BLAD
 	if(type_flag == -1 || clock_flag == -1 ) return ERROR;
 	//ZLE TYPY
