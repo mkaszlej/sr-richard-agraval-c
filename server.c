@@ -6,9 +6,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include "communication.h"
-
-
-
+#include "defines.h"
 
 extern int global_port;
 extern int waiting_clock;
@@ -21,7 +19,7 @@ void *add_to_waiting_queue(int sock, long ip)
 	{
 		fprintf(stderr, "[%d]RM wq[%d]: ERROR no such node in config ip:%s\n", get_clock(), sock, ip );
 		close(sock);
-		return;
+		return NULL;
 	}
 	
 	increment_waiting_queue();
@@ -37,7 +35,7 @@ void *add_to_waiting_queue(int sock, long ip)
 
 	send_response(sock);
 	
-	return;
+	return NULL;
 }
 
 void *send_response(int sock)
@@ -95,57 +93,21 @@ void *receiveMessage(void *fd_void_ptr)
 		fprintf(stderr, "[%d]RM[%d]: ERROR nothing to read from socket\n", get_clock(), sock);
 		return NULL;
 	}
-
-	//printf("BUFFER:%s|\n",buffer);
-	
 		
 	//testJson(buffer);
 	printf("%%% [%d] PARSING: %s \n", get_clock(), buffer);
 	int parser_response = do_parse_json(buffer) ;
 	printf("%%% [%d] MESSAGE: %d\n", get_clock(), parser_response );
 	
-	//TODO check buffor size!
-		
-	// Token will point to end of json.
-	token = strtok(buffer, "}");
-	token++;
-	json = (char *)malloc( n );
-	strcpy(json,token);
-
-    printf("[%d]RM[%d] json: {%s} \n", get_clock(), sock ,json);
-	fflush(stdout);
-
-	token = strtok(json,",:");
-	token = strtok(NULL,",:");
-
-	//############# TUTAJ SEGMENT
-
-	if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
-	else type = 0;
-
-	//printf("type: %d\n", type);
-
-	token = strtok(NULL, ",:");
-	token = strtok(NULL, ",:");
-	
-	clock = atoi(token);
-	//printf("clock: %d\n", clock);
-
-	/*Zwieksz zegar*/
-	//update_clock(clock);
-	
-	/*Message is parsed we can free json*/
-	free(json);
-	
 	/* We`ve received ok message */
-	if( type == 1 )
+	if( parser_response == OK )
 	{
 		/* This should never happen */
 		if(get_waiting() == 1)
 		{
 			fprintf(stderr, "[%d]RM[%d]: ERROR received ok while not waiting\n", get_clock(), sock);
 			close(sock);
-			return;			
+			return NULL;
 		}
 		
 		/* Find IP of sender */
@@ -163,7 +125,7 @@ void *receiveMessage(void *fd_void_ptr)
 		}
 	}
 	/* We-ve received order message */
-	else
+	else if( parser_response == ORDER )
 	{
 		/* We are not waiting for critical section - we can agree */
 		if(get_waiting() == 0)
@@ -265,7 +227,7 @@ void *listenMessages(void *x_void_ptr)
 		//printf("[%d]RM[%d] rd->ip:%d port:%d;rd->port: %d\n",  get_clock(), newsockfd, rd->ip, rd->port, ntohs(cli_addr.sin_port) );
 		
 		/* create a second thread which executes inc_x(&x) */
-		if(pthread_create(& process_thread, NULL, receiveMessage, rd)) {
+		if(pthread_create(& process_thread, NULL, receiveMessage2, rd)) {
 			fprintf(stderr, "[%d]RM[%d] Error creating thread\n", get_clock(), newsockfd );
 			exit(1);
 		}

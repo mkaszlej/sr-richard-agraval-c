@@ -7,6 +7,9 @@ void *listenMessages(void *not_used);
 //Odebranie wiadomosci
 void *receiveMessage(void *socket_fd_ptr);
 
+//Odebranie wiadomosci
+void *receiveMessage2(void *socket_fd_ptr);
+
 //Send broadcast
 void *sendBroadcast(void *json_ptr);
 
@@ -14,8 +17,10 @@ void *sendBroadcast(void *json_ptr);
 void *send_message(void *message_ptr);
 
 void *send_response(int sock);
+void *send_response2(long ip);
 
 void *add_to_waiting_queue(int sock, long ip);
+void *add_to_waiting_queue2(int sock, long ip);
 //-------TIMER--------
 
 //Get logic timer value
