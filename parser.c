@@ -26,6 +26,8 @@ int do_parse_json(char * buffer)
 	jsmntok_t token[10];
 	jsmn_parser p;
 	
+	for(i=0; i<10; i++) token[i].type=-1;
+
 	jsmn_init(&p);
 	parser_return_code = jsmn_parse(&p, buffer, token, 10);
 	if(parser_return_code != JSMN_SUCCESS) return ERROR;
@@ -33,8 +35,9 @@ int do_parse_json(char * buffer)
 	//SZUKAJ TYPU I ZEGARA
 	for(i=0; i<10; i++)
 	{
-			if( token_string(buffer, token[i], "type") ) type_flag = i+1;
-			if( token_string(buffer, token[i], "clock") ) clock_flag = i+1;
+		if(token[i].type == -1) break;
+		if( token_string(buffer, token[i], "type") ) type_flag = i+1;
+		if( token_string(buffer, token[i], "clock") ) clock_flag = i+1;
 	}
 
 	fprintf(stderr,"### type_flag: %d, clock_flag: %d\n", type_flag, clock_flag);
