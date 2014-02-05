@@ -42,7 +42,7 @@ void *send_response(int sock)
 	int n;
 	/* Prepare response */
 	char response[256];
-	sprintf(response, "{type:\"ok\",clock:%d}", get_clock() );
+	sprintf(response, "{\"type\":\"ok\",\"clock\":%d}", get_clock() );
 
 	/* sending message increments clock */
 	increment_clock();
@@ -93,8 +93,8 @@ void *receiveMessage(void *fd_void_ptr)
 
 	printf("BUFFER:%s|\n",buffer);
 	
+	//TODO check buffor size!
 		
-	
 	// Token will point to end of json.
 	token = strtok(buffer, "}");
 	token++;
@@ -106,6 +106,8 @@ void *receiveMessage(void *fd_void_ptr)
 
 	token = strtok(json,",:");
 	token = strtok(NULL,",:");
+
+	//############# TUTAJ SEGMENT
 
 	if( strcmp(token, "ok") == 0 || strcmp(token, "\"ok\"") == 0 ) type = 1;
 	else type = 0;

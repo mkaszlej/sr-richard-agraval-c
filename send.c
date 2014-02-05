@@ -10,7 +10,7 @@
 #include "communication.h"
 #include <errno.h>
 
-#define MAX_CRITICAL_TIME 11
+#define MAX_CRITICAL_TIME 4
 
 extern nodeAddress node[];
 extern int nodeCount;

@@ -136,7 +136,7 @@ void *broadcast()
 	
 	/* Utwórz wysyłanego jsona */
 	json = malloc(30*sizeof(char));
-	sprintf(json,"{type:\"order\",clock:%d}\0", waiting_clock );
+	sprintf(json,"{\"type\":\"order\",\"clock\":%d}\0", waiting_clock );
 
 	for(i=0 ; i<nodeCount ; i++)
 	{
