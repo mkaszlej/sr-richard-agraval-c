@@ -79,7 +79,6 @@ void *receiveMessage2(void *fd_void_ptr)
     char buffer[256];
 	bzero(buffer,256);		//zeruj buffer
 
-	fprintf(stdout, "[%d]RM[%d]: reading from socket...\n", get_clock(), sock);
 
 	n = read(sock,buffer,255);	//odczytaj z bufora
 
@@ -92,7 +91,9 @@ void *receiveMessage2(void *fd_void_ptr)
 		fprintf(stderr, "[%d]RM[%d]: ERROR nothing to read from socket\n", get_clock(), sock);
 		return NULL;
 	}
-		
+
+	fprintf(stdout, "[%d]RM[%d]: odczytalem: %s \n", get_clock(), sock, buffer);
+
 	//PARSUJ
 	int parser_response = do_parse_json(buffer) ;
 	
