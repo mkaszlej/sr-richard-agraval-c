@@ -96,7 +96,7 @@ void *receiveMessage(void *fd_void_ptr)
 		
 	//testJson(buffer);
 	printf("%%% [%d] PARSING: %s \n", get_clock(), buffer);
-	int parser_response = do_parse_json(buffer) ;
+	int parser_response = do_parse_json(buffer, &clock) ;
 	printf("%%% [%d] MESSAGE: %d\n", get_clock(), parser_response );
 	
 	/* We`ve received ok message */

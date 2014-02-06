@@ -50,5 +50,5 @@ typedef struct{
 } receive_thread_data;
 
 void testJson(char *);
-int do_parse_json(char *);
+int do_parse_json(char *, int*);
 #endif

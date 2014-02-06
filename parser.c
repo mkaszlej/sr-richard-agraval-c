@@ -16,7 +16,7 @@ int token_string( char* js, jsmntok_t t, char *s)
 }
 
 
-int do_parse_json(char * buffer)
+int do_parse_json(char * buffer,int* clock)
 {
 	int i;
 	int type_flag = -1;
@@ -50,6 +50,7 @@ int do_parse_json(char * buffer)
 	int rec_clock = strtol( buffer+token[clock_flag].start, NULL, 0 );
 
 	update_clock(rec_clock);
+	(*clock) = rec_clock;
 	
 	if( token_string(buffer, token[type_flag], "order") ) return ORDER;
 	else if( token_string(buffer, token[type_flag], "ok") ) return OK;

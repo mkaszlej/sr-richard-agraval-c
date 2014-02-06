@@ -16,13 +16,6 @@ extern nodeAddress node[];
 
 void *add_to_waiting_queue2(int sock, long ip)
 {
-	int node_id = find_node( ip );
-	if(node_id == -1)
-	{
-		fprintf(stderr, "[%d]RM wq[%d]: ERROR no such node in config ip:%s\n", get_clock(), sock, ip );
-		close(sock);
-		return NULL;
-	}
 	
 	increment_waiting_queue();
 	 
@@ -34,9 +27,6 @@ void *add_to_waiting_queue2(int sock, long ip)
 	decrement_waiting_queue();
 	
 	printf("[%d]RM[%d] RELEASING FROM WAITING QUEUE -> IP: %d\n", get_clock(), sock, ip );
-
-	send_response2(ip);
-	close(sock);
 	
 	return NULL;
 }
@@ -95,7 +85,7 @@ void *receiveMessage2(void *fd_void_ptr)
 	fprintf(stdout, "[%d]RM[%d]: odczytalem: %s \n", get_clock(), sock, buffer);
 
 	//PARSUJ
-	int parser_response = do_parse_json(buffer) ;
+	int parser_response = do_parse_json(buffer,&clock) ;
 	
 	switch (parser_response) {
 		case OK:
@@ -150,11 +140,15 @@ void *receiveMessage2(void *fd_void_ptr)
 					else{
 						printf("[%d]RM[%d] WAITING, SAME TIME! %d > %d <- MY IP HIGHIER -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip, local_address, ip );
 						add_to_waiting_queue(sock, ip);
+						send_response(ip);
+						close(sock);
 					}
 				}
 				else{
 					printf("[%d]RM[%d] WAITING AND I WAS FIRST! -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip );
 					add_to_waiting_queue(sock, ip);
+					send_response(ip);
+					close(sock);
 				}
 			}
 
