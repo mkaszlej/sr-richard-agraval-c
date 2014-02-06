@@ -1,8 +1,8 @@
 1. Przepisać serwer
-	- inkrementuj zegar przy odbieraniu
-	- obłsuga wiadomości ok
-	- parser json
-	- odpowiedź na oddzielnym wątku
+ok	- inkrementuj zegar przy odbieraniu
+ok	- obłsuga wiadomości ok
+ok	- parser json
+ok	- odpowiedź na oddzielnym wątku
 	- uwaga na puste wiadomosci
 
 	
@@ -11,8 +11,6 @@
 
 
 dodawanie jak się zgłoszą
-
-odpowiedź na oddzielnym
 
 oodzielnie timeout obsługiwać
 
