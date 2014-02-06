@@ -1,15 +1,12 @@
-#include <stdio.h>
 #include <semaphore.h>
-#include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
-#include <string.h>
-#include "main.h"
+
 #include "communication.h"
 #include "defines.h"
+#include "main.h"
 
-extern nodeAddress node[];
 extern int nodeCount;
-extern int nodeActive;
 extern sem_t waiting_mutex;		
 extern sem_t error_mutex;		
 extern sem_t counter_waiting_mutex;		
@@ -62,6 +59,8 @@ void * enter_critical_section()
 		fflush(stdout);
 	}
 	printf("\n*******************************\n");
+
+	return NULL;
 }
 
 void * leave_critical_section()
@@ -72,12 +71,14 @@ void * leave_critical_section()
 	/* reset flag */
 	set_stop_waiting();
 	/* reset all nodes */
-	for(i; i<nodeCount; i++)
+	for(i=0; i<nodeCount; i++)
 	{
 		//reset all nodes
 		reset_node_ok(i);
 	}
 	printf("[%d] *** LEFT CRITICAL_SECTION *** \n", get_clock() );
+
+	return NULL;
 }
 
 void set_start_waiting()
@@ -163,6 +164,8 @@ void * raise_error(int type, int param)
 	
 	set_stop_waiting();
 	
+	return NULL;
+
 }
 
 

@@ -16,6 +16,41 @@ int token_string( char* js, jsmntok_t t, char *s)
 }
 
 
+int parser_read(int sock, char * buffer)
+{
+	int n;
+	int continue_reading=0;
+	int parser_return_code;
+
+	char bigBuffer[255];
+	bzero(bigBuffer,255);
+
+	char* bigBufferPtr = bigBuffer+1; //potem cofamy wskaznik żeby ominąć \0
+
+	jsmntok_t token[10];
+	jsmn_parser p;
+	jsmn_init(&p);
+
+	do{
+
+		printf("#");
+		n = read(sock,buffer,255);	//odczytaj z bufora
+
+		if (n < 0){return -1;}
+
+		if(n > 0) strncat (bigBufferPtr-1, buffer, n);   // kopiuje 5 znakow, dostawia na koncu \0
+
+		continue_reading = jsmn_parse(&p, bigBuffer, token, 10);
+		if(continue_reading==JSMN_ERROR_PART) continue_reading=1;
+
+		sleep(0.1);
+	}
+	while(continue_reading==1);
+
+	return strcpy(buffer,bigBuffer);
+
+}
+
 int do_parse_json(char * buffer,int* clock)
 {
 	int i;
@@ -36,15 +71,15 @@ int do_parse_json(char * buffer,int* clock)
 	for(i=0; i<10; i++)
 	{
 		if(token[i].type == -1) break;
-		if( token_string(buffer, token[i], "type") ) type_flag = i+1;
-		if( token_string(buffer, token[i], "clock") ) clock_flag = i+1;
+		if( token_string(buffer, token[i], "type") || token_string(buffer, token[i], "Type") || token_string(buffer, token[i], "TYPE") ) type_flag = i+1;
+		if( token_string(buffer, token[i], "clock") || token_string(buffer, token[i], "Clock") || token_string(buffer, token[i], "CLOCK") ) clock_flag = i+1;
 	}
 
 	fprintf(stderr,"### type_flag: %d, clock_flag: %d\n", type_flag, clock_flag);
 
 	//NIE ZNALEZIONO! BLAD
 	if(type_flag == -1 || clock_flag == -1 ) return ERROR;
-	//ZLE TYPY
+	//ZLE TYPY! BLAD
 	if(token[type_flag].type != JSMN_STRING && token[clock_flag].type != JSMN_PRIMITIVE) return ERROR;
 
 	int rec_clock = strtol( buffer+token[clock_flag].start, NULL, 0 );

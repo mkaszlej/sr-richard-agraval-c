@@ -3,6 +3,7 @@
 #include <string.h>
 #include <semaphore.h>
 #include <netinet/in.h>
+#include <limits.h>
 #include "main.h"
 #include "communication.h"
 #include "globals.h"
@@ -77,8 +78,8 @@ int main(int argc, char* argv[])
 	
 	if(local_address<0)
 	{
-		fprintf(stderr, "NO LOCAL IP ADDRESS SPECIFIED\n");
-		exit(1);
+		fprintf(stderr, "NO LOCAL IP ADDRESS SPECIFIED. ASSUMED: %d\n", INT_MAX);
+		local_address = INT_MAX;
 	}
 	
 	//START CONFIG FILE MONITORING THREAD
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 
 	//START COMMUNICATION LISTENING THREAD
 	pthread_t server_thread;
-	if(pthread_create( & server_thread, NULL, listenMessages, NULL)){
+	if(pthread_create( & server_thread, NULL, listen_messages, NULL)){
 		fprintf(stderr, "Error starting server thread\n");
 		exit(1);
 	}
@@ -113,7 +114,6 @@ void mainLoop()
 
 void *broadcast()
 {
-	//TODO: we can save memory by allocating nodeActive here:
 	pthread_t send_thread[nodeCount];
 	send_thread_data * sd;
 	int local_clock, i, rc;
@@ -136,7 +136,7 @@ void *broadcast()
 	
 	/* Utwórz wysyłanego jsona */
 	json = malloc(50*sizeof(char));
-	sprintf(json,"{\"type\":\"order\",\"id\":2011,\"clock\":%d }\0", waiting_clock );
+	sprintf(json,"{\"type\":\"order\",\"clock\":%d }\0", waiting_clock );
 
 	for(i=0 ; i<nodeCount ; i++)
 	{

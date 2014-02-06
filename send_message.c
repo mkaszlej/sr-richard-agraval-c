@@ -29,14 +29,12 @@ void * send_message(void * send_thread_data_ptr)
 	{
 		fprintf(stderr,"[%d]SM[%d] received null message\n", get_clock(), waiting_clock );
 		raise_error(0, data->node_id);
-		return;
+		return NULL;
 	}
-	else
-		printf("[%d]SM[%d] message: %s \n", get_clock(), waiting_clock, json);
 
 	/* copy message to buffer */
-    char buffer[100];
-    bzero(buffer,100);
+    char buffer[250];
+    bzero(buffer,250);
     strcpy(buffer,json);
     
     /* send a message to node */
@@ -82,13 +80,13 @@ void * send_message(void * send_thread_data_ptr)
 	else
 		printf("[%d]SM[%d] message %s send to ip: %s:%d\n", get_clock(), waiting_clock, data->json, data->ip, data->port);
     
-	/* TODO: CHECK IF WE NEED RESPONSE... */
-//	await_response(sockfd, data);
 
 	close(sockfd);
+
 	/* we have to free malloced struct we received */
 	if(data!=NULL) free(data);
-    return NULL;
+
+	return NULL;
 }
 
 

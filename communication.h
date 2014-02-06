@@ -2,26 +2,19 @@
 #define SERVER_H_INCLUDED
 
 //Metoda realizuje nasluch na sokecie
-void *listenMessages(void *not_used);
+void *listen_messages(void *not_used);
 
-//Odebranie wiadomosci
-void *receiveMessage(void *socket_fd_ptr);
-
-//Odebranie wiadomosci
-void *receiveMessage2(void *socket_fd_ptr);
-
-//Send broadcast
-void *sendBroadcast(void *json_ptr);
-
-//Send message
+//Wysylanie wiadomosci
 void *send_message(void *message_ptr);
 
-void *send_response(int sock);
-void *send_response2(long ip);
+//Odebranie wiadomosci
+void *receive_message(void *socket_fd_ptr);
 
+//W communication_utils
+void *send_response(long ip);
 void *add_to_waiting_queue(int sock, long ip);
-void *add_to_waiting_queue2(int sock, long ip);
-//-------TIMER--------
+
+//------- Timer --------
 
 //Get logic timer value
 int get_clock();
@@ -31,6 +24,13 @@ int update_clock(int new);
 
 //Increment time by one
 int increment_clock();
+
+
+//------ Parser ----------
+int parser_read(int, char*);
+int do_parse_json(char *, int*);
+
+//------- Data -----------
 
 //Data to sending thread
 typedef struct{
@@ -46,9 +46,7 @@ typedef struct{
 	int sockfd;
 	int port;
 	long ip;
-	char * ip_name;
 } receive_thread_data;
 
-void testJson(char *);
-int do_parse_json(char *, int*);
+
 #endif

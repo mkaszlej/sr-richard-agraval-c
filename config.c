@@ -1,16 +1,16 @@
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <time.h>
-#include <arpa/inet.h>
-#include "main.h"
+#include <unistd.h>
+
 
 extern int config_last_modified;
 extern char* configPath;
-extern int nodeCount;
-extern nodeAddress node[];
 
 void *configLoop( void * configPath_ptr )
 {
@@ -39,7 +39,6 @@ void *configLoop( void * configPath_ptr )
 		}
 		
 		sleep(2);
-	//	broadcast("not_ok");
 	}	
 	return 0;
 }
@@ -73,8 +72,7 @@ int parseConfig(FILE * configFile)
         	result = fgets (buffer, max_n, configFile);   // czytamy ze standardowego wejścia
         	if (result != NULL) 
         	{
-//            		printf ("ODCZYTALEM:%s", buffer);
-			parseConfigLine(buffer);
+        		parseConfigLine(buffer);
         	}
         	else
             		printf ("\n blad odczytu\n");
@@ -123,10 +121,9 @@ int parseConfigLine(char *buffer)
 	{
 
 		printf("ODCZYTALEM LINIE: %s IP= %s:%d\n", name, ip, port );
-		//TODO: USUWANIE NODE!
 
 		//jesli nie ma takiego, to dodaj
-	//	if( findNode( name, ip, port ) == -1 )
+//		if( find_node( ip ) == -1 )
 			add_node( name, ip, port );	
 	//	else printf("LINIA JUZ ISTNIEJE: %s IP %s:%d = %d\n", name, ip, port, findNode( name, ip, port));
 
