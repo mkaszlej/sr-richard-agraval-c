@@ -1,12 +1,15 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "communication.h"
 #include "defines.h"
+#include "main.h"
 
-
+extern nodeAddress node[];
 extern int		waiting_clock;
 extern long 	local_address;
 
@@ -19,6 +22,9 @@ void *receive_message(void *fd_void_ptr)
 	int port = ra->port;   	//sender port
 	long ip = ra->ip;
     int n,clock;
+
+    int id = find_node(ip);
+    if(id != -1) node[id].last_message =  (unsigned)time(NULL);
 
     char buffer[256];
 	bzero(buffer,256);		//zeruj buffer
