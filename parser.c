@@ -44,18 +44,24 @@ int parser_read(int sock, char * buffer)
 	FD_ZERO(&set);
 	FD_SET(sock, &set);
 
+	int timeout_count = 0;
+
 	do{
+
+		if(timeout_count > 5) return -1;
 
 		s = select(sock+1, &set, NULL, NULL, &timeout);//read(sock,buffer,255);	//odczytaj z bufora
 		if(s<0){return -1;}
 
 		printf("\n#timeout#\n");
+		timeout_count++;
+
 		fflush(stdout);
 
 		n=0;//profilaktycznie...
 
 		//czy jest cos do odczytania
-		if (FD_ISSET(sock, &set)){
+//		if (FD_ISSET(sock, &set)){
 			printf("!");
 
 			n=read(sock,buffer,255);	//odczytaj z bufora
@@ -65,7 +71,7 @@ int parser_read(int sock, char * buffer)
 				strncat (bigBufferPtr-1, buffer, n);   // kopiuje n znakow, dostawia na koncu \0
 				continue_reading = jsmn_parse(&p, bigBuffer, token, 10);
 			}
-		}
+//		}
 
 		if( continue_reading==JSMN_ERROR_PART || n==0 ) continue_reading=1;
 
