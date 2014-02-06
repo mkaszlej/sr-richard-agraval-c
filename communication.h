@@ -13,7 +13,7 @@ void *receive_message(void *socket_fd_ptr);
 //W communication_utils
 void *send_response(long ip);
 void *add_to_waiting_queue(int sock, long ip);
-
+void handle_timeout(int id);
 //------- Timer --------
 
 //Get logic timer value

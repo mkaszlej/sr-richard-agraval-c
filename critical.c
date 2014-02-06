@@ -53,7 +53,7 @@ void * enter_critical_section()
 	increment_clock();
 	
 	printf("*******************************\n[%d] CRITICAL_SECTION", get_clock() );
-	for(i=0; i<MAX_CRITICAL_TIME-1; i++){
+	for(i=0; i<MAX_CRITICAL_TIME-3; i++){
 		sleep(1);
 		printf("-");
 		fflush(stdout);

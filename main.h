@@ -15,6 +15,7 @@ typedef struct {
 	int port;
 	char ok;
 	char active;
+	int last_message;
 } nodeAddress;
 
 //Glowna petla programu

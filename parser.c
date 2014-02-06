@@ -52,7 +52,7 @@ int parser_read(int sock, char * buffer)
 		s = select(sock+1, &set, NULL, NULL, &timeout);//read(sock,buffer,255);	//odczytaj z bufora
 		if(s<0){return -1;}
 
-		printf("\n#timeout#\n");
+//		printf("\n#timeout#\n");
 		timeout_count++;
 
 		fflush(stdout);
@@ -74,7 +74,7 @@ int parser_read(int sock, char * buffer)
 
 		if( continue_reading==JSMN_ERROR_PART || n==0 ) continue_reading=1;
 
-		sleep(1);
+		sleep(0.3);
 	}
 	while(continue_reading==1);
 

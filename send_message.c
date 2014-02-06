@@ -8,9 +8,12 @@
 #include <time.h>
 #include "main.h"
 #include "communication.h"
+#include "defines.h"
 #include <errno.h>
 
 
+extern nodeAddress node[];
+extern int nodeActive;
 extern int waiting_clock;
 
 void * send_message(void * send_thread_data_ptr)
@@ -83,10 +86,28 @@ void * send_message(void * send_thread_data_ptr)
 
 	close(sockfd);
 
+	handle_timeout(data->node_id);
 	/* we have to free malloced struct we received */
 	if(data!=NULL) free(data);
 
 	return NULL;
 }
 
+void handle_timeout(int id)
+{
+	int i=0;
+	int starttime = (unsigned)time(NULL);
+	node[id].last_message = (unsigned)time(NULL);
 
+	for(i=0; i< MAX_CRITICAL_TIME*nodeActive; i++)
+	{
+		if(starttime < node[id].last_message) return;
+		else if( (unsigned)time(NULL) - node[id].last_message > MAX_CRITICAL_TIME*nodeActive )
+		{
+			raise_error(1,id);
+			return;
+		}
+		sleep(1);
+	}
+	raise_error(1,id);
+}
