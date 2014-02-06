@@ -45,10 +45,12 @@ int parser_read(int sock, char * buffer)
 	FD_SET(sock, &set);
 
 	do{
-		printf("#");
 
 		s = select(sock+1, &set, NULL, NULL, &timeout);//read(sock,buffer,255);	//odczytaj z bufora
 		if(s<0){return -1;}
+
+		printf("\n#timeout#\n");
+		fflush(stdout);
 
 		n=0;//profilaktycznie...
 
