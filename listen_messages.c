@@ -20,7 +20,7 @@ int doSelect(int sock)
 	fd_set set;
 	FD_ZERO(&set);
 	FD_SET(sock, &set);
-
+	printf("$");fflush(stdout);
 	return select(sock+1, &set, NULL, NULL, &timeout);
 
 }
