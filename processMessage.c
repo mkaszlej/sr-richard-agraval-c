@@ -134,20 +134,20 @@ void *receiveMessage2(void *fd_void_ptr)
 
 					if( ip <= local_address ){
 						printf("[%d]RM[%d] WAITING, SAME TIME! %d <= %d <- MY IP LOWER -> SENDING OK to IP: %d\n", get_clock(), sock, ip, local_address, ip );
-						send_response(ip);
+						send_response2(ip);
 						close(sock);
 					}
 					else{
 						printf("[%d]RM[%d] WAITING, SAME TIME! %d > %d <- MY IP HIGHIER -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip, local_address, ip );
 						add_to_waiting_queue(sock, ip);
-						send_response(ip);
+						send_response2(ip);
 						close(sock);
 					}
 				}
 				else{
 					printf("[%d]RM[%d] WAITING AND I WAS FIRST! -> WAITING QUEUE to IP: %d\n", get_clock(), sock, ip );
 					add_to_waiting_queue(sock, ip);
-					send_response(ip);
+					send_response2(ip);
 					close(sock);
 				}
 			}
