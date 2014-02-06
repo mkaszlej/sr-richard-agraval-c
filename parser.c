@@ -36,7 +36,6 @@ int parser_read(int sock, char * buffer)
 	jsmn_init(&p);
 
 	//for select function:
-	int filedesc = open( "dev/ttyS0", O_RDWR ); //first free fd
 	struct timeval timeout;
 	timeout.tv_sec = 0;
 	timeout.tv_usec = 5000;

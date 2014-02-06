@@ -11,6 +11,20 @@
 extern int global_port;
 
 
+int doSelect(int sock)
+{
+	//for select function:
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 10000;
+	fd_set set;
+	FD_ZERO(&set);
+	FD_SET(sock, &set);
+
+	return select(sock+1, &set, NULL, NULL, &timeout);
+
+}
+
 void *listen_messages(void *x_void_ptr)
 {
 
@@ -46,14 +60,28 @@ void *listen_messages(void *x_void_ptr)
      */
     listen(sockfd,5);
     clilen = sizeof(cli_addr);
+
+    int test=0;
     while (1) 
     {
+
+    	test = doSelect(sockfd);
+    	if( test < 0 )
+    	{
+    		fprintf( stderr, "[%d]RM[%d] BIG ERROR on accept\n", get_clock , newsockfd );
+			exit(1);
+    	}
+    	if( test == 0 )
+		{
+    		sleep(1);
+    		continue;
+		}
 
         newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
 	
 		printf("[%d]RM[%d] Connection started port: %d \n", get_clock(), newsockfd, global_port);
 
-        if (newsockfd < 0)
+        if (newsockfd < 0 || test < 0)
         {
             fprintf( stderr, "[%d]RM[%d] ERROR on accept\n", get_clock , newsockfd );
             exit(1);
