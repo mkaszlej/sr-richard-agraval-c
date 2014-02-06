@@ -1,13 +1,16 @@
+#include <fcntl.h>
+//#include <inttypes.h>
+//#include <netinet/in.h>
 #include <stdio.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
+//#include <sys/socket.h>
+//#include <sys/types.h>
+#include <unistd.h>
+
 #include "communication.h"
-#include "jsmn/jsmn.h"
 #include "defines.h"
+#include "jsmn/jsmn.h"
 
 
 int token_string( char* js, jsmntok_t t, char *s)
@@ -16,9 +19,10 @@ int token_string( char* js, jsmntok_t t, char *s)
 }
 
 
+
 int parser_read(int sock, char * buffer)
 {
-	int n;
+	int n,s;
 	int continue_reading=0;
 	int parser_return_code;
 
@@ -31,19 +35,39 @@ int parser_read(int sock, char * buffer)
 	jsmn_parser p;
 	jsmn_init(&p);
 
+	//for select function:
+	int filedesc = open( "dev/ttyS0", O_RDWR ); //first free fd
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 5000;
+	fd_set set;
+	FD_ZERO(&set);
+	FD_SET(sock, &set);
+
 	do{
-
 		printf("#");
-		n = read(sock,buffer,255);	//odczytaj z bufora
 
-		if (n < 0){return -1;}
+		s = select(sock+1, &set, NULL, NULL, &timeout);//read(sock,buffer,255);	//odczytaj z bufora
+		if(s<0){return -1;}
 
-		if(n > 0) strncat (bigBufferPtr-1, buffer, n);   // kopiuje 5 znakow, dostawia na koncu \0
+		n=0;//profilaktycznie...
 
-		continue_reading = jsmn_parse(&p, bigBuffer, token, 10);
-		if(continue_reading==JSMN_ERROR_PART) continue_reading=1;
+		//czy jest cos do odczytania
+		if (FD_ISSET(sock, &set)){
+			printf("!");
 
-		sleep(0.1);
+			n=read(sock,buffer,255);	//odczytaj z bufora
+			if (n < 0){return -1;}
+			if(n > 0)
+			{
+				strncat (bigBufferPtr-1, buffer, n);   // kopiuje n znakow, dostawia na koncu \0
+				continue_reading = jsmn_parse(&p, bigBuffer, token, 10);
+			}
+		}
+
+		if( continue_reading==JSMN_ERROR_PART || n==0 ) continue_reading=1;
+
+		sleep(1);
 	}
 	while(continue_reading==1);
 
